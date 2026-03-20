@@ -35,11 +35,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .create()
         .model("Qwen3.5-35B-A3B")
         .messages(json!([
-            {"role": "system", "content": "你是一个友好的AI助手。"},
-            {"role": "user", "content": "你好，请介绍一下你自己"}
+            {"role": "system", "content": "你是一个友好的AI助手, 你思考和说话以简洁著称。很少废话，你使用中文思考和回复"},
+            {"role": "user", "content": "什么是机器学习,一句话说明即可。"}
         ]))
         .temperature(0.7)
-        .max_tokens(512)
+        .max_tokens(2000)
         .stream(true)
         .send_stream()
         .await?;

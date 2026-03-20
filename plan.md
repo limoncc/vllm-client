@@ -513,9 +513,9 @@ Test: test_real_tool_calling
 - [x] 实现 ChatCompletionsRequest
 - [x] 实现 ChatCompletionResponse
 - [x] 实现 .create() 构建器
-- [ ] 实现 .send() 方法 (Phase 2.3 - 需要 mock server)
+- [x] 实现 .send() 方法 (Phase 2.3 - 使用 mockito 完成)
 - [x] 支持所有参数
-- [ ] 所有测试通过 (Phase 2.1-2.2 通过，共25个测试)
+- [x] 所有测试通过 (Phase 2: test_chat_http 13个 + test_chat_request 9个 + test_chat_response 16个)
 
 ### Phase 3 流式响应
 - [x] 实现 SSE 解析
@@ -532,13 +532,13 @@ Test: test_real_tool_calling
 - [x] 所有测试通过 (Phase 4.1: 10个工具定义测试)
 
 ### Phase 5 高级功能
-- [ ] 支持多模态消息
-- [ ] 支持 extra 参数透传
-- [ ] 实现 Legacy Completions
-- [ ] 所有测试通过
+- [x] 支持多模态消息 (test_multimodal 15个测试)
+- [x] 支持 extra 参数透传
+- [x] 实现 Legacy Completions (test_legacy_completions 13个测试)
+- [x] 所有测试通过
 
 ### Phase 6 集成测试
-- [ ] Mock 服务端测试通过
+- [x] Mock 服务端测试通过 (mock_server 11个测试，使用 mockito)
 - [x] 真实 vLLM 测试通过
 - [x] 文档完善
 
@@ -719,6 +719,26 @@ wiremock = "0.6"  # HTTP mock server
   - 10个集成测试通过，使用真实vLLM服务
 - 遇到问题：
   - 流式响应的 reasoning 字段解析问题已解决
+
+### Day 8: 完成剩余任务 - Mock Server 测试和高级功能
+- 工作内容：
+  - 使用 mockito 替代 wiremock（不需要 nightly Rust）
+  - 创建 tests/test_chat_http.rs - Phase 2.3 HTTP Mock 测试（13个测试）
+  - 创建 tests/test_multimodal.rs - Phase 5.1 多模态测试（15个测试）
+  - 创建 tests/integration/mock_server.rs - Phase 6.1 Mock 服务端测试（11个测试）
+  - 修复各种测试问题（浮点数匹配、请求路径、mock 匹配条件等）
+  - 更新 Cargo.toml 添加 mockito 依赖和新测试配置
+- 测试结果：
+  - 新增 39 个测试，全部通过
+  - 总测试数量：141 个测试通过
+  - test_chat_http: 13 passed
+  - test_multimodal: 15 passed
+  - mock_server: 11 passed
+- 遇到问题：
+  - wiremock 需要 nightly Rust，改用 mockito 解决
+  - mock server 路径匹配问题（/v1/chat/completions vs /chat/completions）
+  - JSON 浮点数匹配问题，通过移除精确匹配解决
+  - 多个 mock 匹配同一请求问题，通过添加更明确的匹配条件解决
 
 ---
 

@@ -40,6 +40,18 @@ path = "tests/test_stream_parse.rs"
 name = "test_tool_definition"
 path = "tests/test_tool_definition.rs"
 
+[[test]]
+name = "test_chat_http"
+path = "tests/test_chat_http.rs"
+
+[[test]]
+name = "test_multimodal"
+path = "tests/test_multimodal.rs"
+
+[[test]]
+name = "mock_server"
+path = "tests/integration/mock_server.rs"
+
 [dependencies]
 # HTTP client
 reqwest = { version = "0.12", default-features = false, features = [
@@ -64,10 +76,10 @@ pin-project-lite = "0.2"
 thiserror = "2.0"
 
 [dev-dependencies]
+mockito = "1.4"  # HTTP mock server for testing (不需要 nightly Rust)
 pretty_assertions = "1.4"
 # Testing
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread", "time"] }
-# wiremock = "0.6"  # 暂时注释掉，需要 nightly Rust。Phase 2-3 需要时再启用
 
 [features]
 default = []
