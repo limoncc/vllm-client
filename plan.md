@@ -764,34 +764,208 @@ wiremock = "0.6"  # HTTP mock server
 
 ## 九、文档与发布
 
-### 9.1 mdBook 文档
+### 9.1 mdBook 文档结构
 
-在 `docs/` 目录下使用 mdBook 创建中英文文档：
+项目支持中英文双语文档，使用 mdBook 构建：
 
 ```
 docs/
-├── book.toml          # mdBook 配置
+├── book.toml              # 英文文档配置
+├── theme/
+│   ├── custom.css         # 自定义样式
+│   └── custom.js          # 自定义脚本
 ├── src/
-│   ├── SUMMARY.md     # 目录
-│   ├── README.md      # 首页
-│   ├── getting-started.md
-│   ├── api.md
-│   ├── examples.md
-│   └── ...
-└── src/zh/            # 中文文档
-    ├── SUMMARY.md
-    ├── README.md
-    └── ...
+│   ├── SUMMARY.md         # 英文目录
+│   ├── README.md          # 首页/简介
+│   ├── getting-started.md # 快速开始概述
+│   ├── getting-started/
+│   │   ├── installation.md    # 安装详细说明
+│   │   ├── quick-start.md     # 快速上手
+│   │   └── configuration.md   # 配置选项
+│   ├── api.md             # API 参考概述
+│   ├── api/
+│   │   ├── client.md          # VllmClient API
+│   │   ├── chat-completions.md # Chat Completions API
+│   │   ├── streaming.md       # 流式响应 API
+│   │   ├── tool-calling.md    # 工具调用 API
+│   │   └── error-handling.md  # 错误处理
+│   ├── examples.md        # 示例概述
+│   ├── examples/
+│   │   ├── basic-chat.md      # 基础聊天示例
+│   │   ├── streaming-chat.md  # 流式聊天示例
+│   │   ├── tool-calling.md    # 工具调用示例
+│   │   └── multimodal.md      # 多模态示例
+│   ├── advanced.md        # 高级主题概述
+│   ├── advanced/
+│   │   ├── thinking-mode.md   # 思考模式
+│   │   ├── custom-headers.md  # 自定义请求头
+│   │   └── timeouts.md        # 超时与重试
+│   ├── contributing.md    # 贡献指南
+│   └── changelog.md       # 更新日志
+├── zh/                    # 中文文档
+│   ├── book.toml          # 中文文档配置
+│   └── src/
+│       ├── SUMMARY.md     # 中文目录
+│       ├── README.md      # 简介
+│       └── ...            # 与英文结构相同
+└── book/                  # 构建输出目录
+    └── html/
 ```
 
-### 9.2 GitHub Pages 部署
+### 9.2 文档内容规划
 
-1. 创建 `gh-pages` 分支或使用 `docs/` 目录
-2. 在 GitHub 仓库 Settings -> Pages 启用
-3. 配置 GitHub Actions 自动部署
-4. 文档地址: `https://limoncc.github.io/vllm-client`
+#### 9.2.1 英文文档内容
 
-### 9.3 crates.io 发布
+| 文件 | 内容要点 | 状态 |
+|------|----------|------|
+| `README.md` | 项目简介、核心功能列表、快速示例、许可证 | ✅ 已完成 |
+| `getting-started.md` | 安装和快速开始概述 | ✅ 已完成 |
+| `getting-started/installation.md` | Cargo 安装、依赖配置、Rust 版本要求 | ⬜ 待编写 |
+| `getting-started/quick-start.md` | 基础聊天气配示例、环境准备 | ⬜ 待编写 |
+| `getting-started/configuration.md` | API Key、超时、Base URL 配置 | ⬜ 待编写 |
+| `api.md` | API 模块概述、设计理念 | ⬜ 待编写 |
+| `api/client.md` | VllmClient 结构体、builder 模式、所有方法 | ⬜ 待编写 |
+| `api/chat-completions.md` | ChatCompletionsRequest 所有参数、响应结构 | ⬜ 待编写 |
+| `api/streaming.md` | MessageStream、StreamEvent 枚举、使用示例 | ⬜ 待编写 |
+| `api/tool-calling.md` | ToolCall 结构体、工具定义、结果返回 | ⬜ 待编写 |
+| `api/error-handling.md` | VllmError 枚举、错误处理最佳实践 | ⬜ 待编写 |
+| `examples.md` | 示例概述、代码仓库链接 | ⬜ 待编写 |
+| `examples/basic-chat.md` | 完整基础聊天示例 | ⬜ 待编写 |
+| `examples/streaming-chat.md` | 流式响应完整示例 | ⬜ 待编写 |
+| `examples/tool-calling.md` | 函数调用完整示例 | ⬜ 待编写 |
+| `examples/multimodal.md` | 图像输入示例（如支持） | ⬜ 待编写 |
+| `advanced.md` | 高级功能概述 | ⬜ 待编写 |
+| `advanced/thinking-mode.md` | Qwen 思考模式、reasoning_content 处理 | ⬜ 待编写 |
+| `advanced/custom-headers.md` | 自定义 HTTP 头、认证扩展 | ⬜ 待编写 |
+| `advanced/timeouts.md` | 超时配置、重试策略 | ⬜ 待编写 |
+| `contributing.md` | 贡献流程、代码规范、PR 指南 | ⬜ 待编写 |
+| `changelog.md` | 版本历史、变更记录 | ⬜ 待编写 |
+
+#### 9.2.2 中文文档内容
+
+中文文档结构与英文相同，内容需要翻译并适当调整语言习惯。
+
+| 文件 | 内容要点 | 状态 |
+|------|----------|------|
+| `README.md` | 项目简介、核心功能列表、快速示例 | ⬜ 待编写 |
+| `getting-started/installation.md` | 安装说明、依赖配置 | ⬜ 待编写 |
+| `getting-started/quick-start.md` | 快速上手指南 | ⬜ 待编写 |
+| `getting-started/configuration.md` | 配置选项说明 | ⬜ 待编写 |
+| `api/client.md` | 客户端 API 文档 | ⬜ 待编写 |
+| `api/chat-completions.md` | 聊天补全 API 文档 | ⬜ 待编写 |
+| `api/streaming.md` | 流式响应 API 文档 | ⬜ 待编写 |
+| `api/tool-calling.md` | 工具调用 API 文档 | ⬜ 待编写 |
+| `api/error-handling.md` | 错误处理文档 | ⬜ 待编写 |
+| `examples/basic-chat.md` | 基础聊天示例 | ⬜ 待编写 |
+| `examples/streaming-chat.md` | 流式聊天示例 | ⬜ 待编写 |
+| `examples/tool-calling.md` | 工具调用示例 | ⬜ 待编写 |
+| `examples/multimodal.md` | 多模态示例 | ⬜ 待编写 |
+| `advanced/thinking-mode.md` | 思考模式文档 | ⬜ 待编写 |
+| `advanced/custom-headers.md` | 自定义请求头文档 | ⬜ 待编写 |
+| `advanced/timeouts.md` | 超时与重试文档 | ⬜ 待编写 |
+| `contributing.md` | 贡献指南 | ⬜ 待编写 |
+| `changelog.md` | 更新日志 | ⬜ 待编写 |
+
+### 9.3 文档构建与测试
+
+#### 9.3.1 本地构建命令
+
+```bash
+# 构建英文文档
+cd vllm-client && mdbook build docs
+
+# 构建中文文档
+cd vllm-client && mdbook build docs/zh
+
+# 本地预览（带热重载）
+cd vllm-client && mdbook serve docs --open
+cd vllm-client && mdbook serve docs/zh --open -p 3001
+```
+
+#### 9.3.2 提交前检查清单
+
+```bash
+# 1. 构建英文文档，确保无错误
+mdbook build docs
+
+# 2. 构建中文文档，确保无错误
+mdbook build docs/zh
+
+# 3. 检查链接（可选，需要安装 mdbook-linkcheck）
+cargo install mdbook-linkcheck
+mdbook build docs
+```
+
+#### 9.3.3 Git 提交前必须通过
+
+- [ ] 英文文档构建成功：`mdbook build docs` 无错误
+- [ ] 中文文档构建成功：`mdbook build docs/zh` 无错误
+- [ ] 无 404 链接（SUMMARY.md 引用的文件都存在）
+- [ ] 代码示例语法正确
+
+### 9.4 GitHub Pages 部署
+
+#### 9.4.1 部署配置
+
+文档通过 GitHub Actions 自动部署到 GitHub Pages：
+
+```yaml
+# .github/workflows/docs.yml
+name: Build and Deploy Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install mdBook
+        run: cargo install mdbook mdbook-linkcheck
+      
+      - name: Build English docs
+        run: mdbook build docs
+      
+      - name: Build Chinese docs
+        run: mdbook build docs/zh
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'docs/book/html'
+  
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+#### 9.4.2 文档地址
+
+- 英文文档: `https://limoncc.github.io/vllm-client/`
+- 中文文档: `https://limoncc.github.io/vllm-client/zh/`
+
+### 9.5 crates.io 发布
 
 在 `Cargo.toml` 中配置：
 
@@ -816,15 +990,31 @@ categories = ["api-bindings", "web-programming"]
 # 登录 crates.io
 cargo login
 
-# 发布
+# 发布前检查
+cargo publish --dry-run
+
+# 正式发布
+cargo login
 cargo publish
 ```
 
-### 9.4 检查清单
+### 9.6 文档发布检查清单
 
+#### 英文文档
 - [ ] 安装 mdBook: `cargo install mdbook`
-- [ ] 初始化 mdBook: `mdbook init docs`
-- [ ] 编写中英文文档内容
-- [ ] 配置 GitHub Pages
+- [ ] 配置 book.toml（create-missing=true, linkcheck optional）
+- [ ] 编写所有章节内容
+- [ ] 本地构建测试通过
+- [ ] 代码示例可运行
+
+#### 中文文档
+- [ ] 配置 zh/book.toml
+- [ ] 翻译所有章节内容
+- [ ] 本地构建测试通过
+
+#### 部署与发布
+- [ ] 创建 GitHub Actions 工作流
+- [ ] 启用 GitHub Pages
+- [ ] 验证在线文档可访问
 - [ ] 更新 Cargo.toml 元数据
 - [ ] 发布到 crates.io

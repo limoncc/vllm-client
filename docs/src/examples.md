@@ -1,23 +1,21 @@
 # Examples
 
-This section contains various code examples for using the vLLM Client.
+This section contains practical code examples demonstrating vLLM Client usage patterns.
 
-## Table of Contents
+## Available Examples
 
-- [Basic Chat](#basic-chat)
-- [Streaming Chat](#streaming-chat)
-- [With System Prompt](#with-system-prompt)
-- [Multiple Turns](#multiple-turns)
-- [Tool Calling](#tool-calling)
-- [Thinking Mode](#thinking-mode)
-- [Custom Parameters](#custom-parameters)
-- [Error Handling](#error-handling)
+### Basic Usage
 
----
+| Example | Description |
+|---------|-------------|
+| [Basic Chat](./examples/basic-chat.md) | Simple chat completion requests |
+| [Streaming Chat](./examples/streaming-chat.md) | Real-time streaming responses |
+| [Tool Calling](./examples/tool-calling.md) | Function calling integration |
+| [Multi-modal](./examples/multimodal.md) | Image and multi-modal inputs |
 
-## Basic Chat
+## Quick Examples
 
-A simple chat completion request:
+### Hello World
 
 ```rust
 use vllm_client::{VllmClient, json};
@@ -26,27 +24,18 @@ use vllm_client::{VllmClient, json};
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = VllmClient::new("http://localhost:8000/v1");
     
-    let response = client
-        .chat
-        .completions()
-        .create()
-        .model("llama-3-70b")
-        .messages(json!([
-            {"role": "user", "content": "Hello, how are you?"}
-        ]))
+    let response = client.chat.completions().create()
+        .model("Qwen/Qwen2.5-7B-Instruct")
+        .messages(json!([{"role": "user", "content": "Hello!"}]))
         .send()
         .await?;
     
-    println!("{}", response.choices[0].message.content.as_ref().unwrap());
+    println!("{}", response.content.unwrap_or_default());
     Ok(())
 }
 ```
 
----
-
-## Streaming Chat
-
-Stream the response token by token:
+### Streaming Output
 
 ```rust
 use vllm_client::{VllmClient, json, StreamEvent};
@@ -56,23 +45,16 @@ use futures::StreamExt;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = VllmClient::new("http://localhost:8000/v1");
     
-    let mut stream = client
-        .chat
-        .completions()
-        .create()
-        .model("llama-3-70b")
-        .messages(json!([
-            {"role": "user", "content": "Write a poem about spring"}
-        ]))
+    let mut stream = client.chat.completions().create()
+        .model("Qwen/Qwen2.5-7B-Instruct")
+        .messages(json!([{"role": "user", "content": "Tell me a story"}]))
         .stream(true)
         .send_stream()
         .await?;
     
     while let Some(event) = stream.next().await {
-        match &event {
-            StreamEvent::Reasoning(delta) => print!("{}", delta),
-            StreamEvent::Content(delta) => print!("{}", delta),
-            _ => {}
+        if let StreamEvent::Content(delta) = event {
+            print!("{}", delta);
         }
     }
     
@@ -81,342 +63,134 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
----
-
-## With System Prompt
-
-Include a system prompt to set the assistant's behavior:
+### Tool Calling
 
 ```rust
 use vllm_client::{VllmClient, json};
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = VllmClient::new("http://localhost:8000/v1");
-    
-    let response = client
-        .chat
-        .completions()
-        .create()
-        .model("llama-3-70b")
-        .messages(json!([
-            {"role": "system", "content": "You are a helpful coding assistant. Be concise and provide code examples when appropriate."},
-            {"role": "user", "content": "How do I read a file in Rust?"}
-        ]))
-        .send()
-        .await?;
-    
-    println!("{}", response.choices[0].message.content.as_ref().unwrap());
-    Ok(())
-}
-```
-
----
-
-## Multiple Turns
-
-Maintain a conversation history:
-
-```rust
-use vllm_client::{VllmClient, json};
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = VllmClient::new("http://localhost:8000/v1");
-    
-    let messages = json!([
-        {"role": "user", "content": "My name is Alice."},
-        {"role": "assistant", "content": "Hello Alice! Nice to meet you. How can I help you today?"},
-        {"role": "user", "content": "What's my name?"}
-    ]);
-    
-    let response = client
-        .chat
-        .completions()
-        .create()
-        .model("llama-3-70b")
-        .messages(messages)
-        .send()
-        .await?;
-    
-    println!("{}", response.choices[0].message.content.as_ref().unwrap());
-    Ok(())
-}
-```
-
----
-
-## Tool Calling
-
-Define and use tools for function calling:
-
-```rust
-use vllm_client::{VllmClient, json};
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = VllmClient::new("http://localhost:8000/v1");
-    
-    let tools = json!([
-        {
-            "type": "function",
-            "function": {
-                "name": "get_weather",
-                "description": "Get the current weather for a location",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "location": {
-                            "type": "string",
-                            "description": "City name, e.g., Tokyo"
-                        },
-                        "unit": {
-                            "type": "string",
-                            "enum": ["celsius", "fahrenheit"],
-                            "description": "Temperature unit"
-                        }
-                    },
-                    "required": ["location"]
-                }
-            }
-        }
-    ]);
-    
-    let response = client
-        .chat
-        .completions()
-        .create()
-        .model("llama-3-70b")
-        .messages(json!([
-            {"role": "user", "content": "What's the weather like in Tokyo?"}
-        ]))
-        .tools(tools)
-        .send()
-        .await?;
-    
-    if let Some(tool_calls) = &response.choices[0].message.tool_calls {
-        for tool_call in tool_calls {
-            println!("Function: {}", tool_call.function.name);
-            println!("Arguments: {}", tool_call.function.arguments);
-            
-            // Execute the function and get the result
-            let result = execute_weather_function(&tool_call.function.arguments);
-            
-            // Return the result back to the model (next turn)
-            // ...
-        }
-    }
-    
-    Ok(())
-}
-
-fn execute_weather_function(args: &str) -> String {
-    // Your function implementation here
-    "{\"temperature\": 22, \"condition\": \"sunny\"}".to_string()
-}
-```
-
----
-
-## Thinking Mode
-
-For models that support reasoning/thinking (like Qwen with thinking enabled):
-
-```rust
-use vllm_client::{VllmClient, json, StreamEvent};
-use futures::StreamExt;
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = VllmClient::new("http://localhost:8000/v1");
-    
-    let mut stream = client
-        .chat
-        .completions()
-        .create()
-        .model("qwen-3")
-        .messages(json!([
-            {"role": "user", "content": "Solve: What is 15 * 23 + 42?"}
-        ]))
-        .extra(json!({
-            "chat_template_kwargs": {
-                "enable_thinking": true
-            }
-        }))
-        .stream(true)
-        .send_stream()
-        .await?;
-    
-    print!("Thinking: ");
-    while let Some(event) = stream.next().await {
-        match &event {
-            StreamEvent::Reasoning(delta) => {
-                // Reasoning/thinking content
-                print!("{}", delta);
-            }
-            StreamEvent::Content(delta) => {
-                // Final answer
-                print!("{}", delta);
-            }
-            StreamEvent::Done => break,
-            _ => {}
-        }
-    }
-    
-    println!();
-    Ok(())
-}
-```
-
----
-
-## Custom Parameters
-
-Use various generation parameters:
-
-```rust
-use vllm_client::{VllmClient, json};
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = VllmClient::new("http://localhost:8000/v1");
-    
-    let response = client
-        .chat
-        .completions()
-        .create()
-        .model("llama-3-70b")
-        .messages(json!([
-            {"role": "user", "content": "Generate a creative story opening."}
-        ]))
-        .temperature(0.9)           // Higher = more creative
-        .top_p(0.95)                // Nucleus sampling
-        .top_k(50)                  // Top-k sampling
-        .max_tokens(500)            // Maximum response length
-        .extra(json!({
-            "repetition_penalty": 1.1,
-            "frequency_penalty": 0.5
-        }))
-        .send()
-        .await?;
-    
-    println!("{}", response.choices[0].message.content.as_ref().unwrap());
-    
-    // Print token usage
-    println!("\n--- Token Usage ---");
-    println!("Prompt tokens: {}", response.usage.prompt_tokens);
-    println!("Completion tokens: {}", response.usage.completion_tokens);
-    println!("Total tokens: {}", response.usage.total_tokens);
-    
-    Ok(())
-}
-```
-
----
-
-## Error Handling
-
-Handle various error scenarios:
-
-```rust
-use vllm_client::{VllmClient, json, VllmError};
-use std::time::Duration;
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = VllmClient::new("http://localhost:8000/v1")
-        .with_timeout(Duration::from_secs(30));
-    
-    match client
-        .chat
-        .completions()
-        .create()
-        .model("llama-3-70b")
-        .messages(json!([
-            {"role": "user", "content": "Hello"}
-        ]))
-        .send()
-        .await
+let tools = json!([
     {
-        Ok(response) => {
-            println!("Response: {}", response.choices[0].message.content.as_ref().unwrap());
-        }
-        Err(VllmError::HttpError(e)) => {
-            eprintln!("HTTP error (connection issue?): {}", e);
-        }
-        Err(VllmError::ApiError { message, code }) => {
-            eprintln!("API error (code {:?}): {}", code, message);
-        }
-        Err(VllmError::ParseError(e)) => {
-            eprintln!("Failed to parse response: {}", e);
-        }
-        Err(e) => {
-            eprintln!("Unexpected error: {}", e);
+        "type": "function",
+        "function": {
+            "name": "get_weather",
+            "description": "Get weather for a location",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {"type": "string"}
+                },
+                "required": ["location"]
+            }
         }
     }
-    
-    Ok(())
+]);
+
+let response = client.chat.completions().create()
+    .model("Qwen/Qwen2.5-7B-Instruct")
+    .messages(json!([
+        {"role": "user", "content": "What's the weather in Tokyo?"}
+    ]))
+    .tools(tools)
+    .send()
+    .await?;
+
+if response.has_tool_calls() {
+    // Execute tools and return results
 }
 ```
 
----
+## Example Structure
 
-## Complete Example with Retry Logic
+Each example includes:
+- Complete, runnable code
+- Required dependencies
+- Step-by-step explanations
+- Common variations and use cases
 
-A more robust example with retry logic:
+## Running Examples
+
+### Prerequisites
+
+1. A running vLLM server:
+   ```bash
+   pip install vllm
+   vllm serve Qwen/Qwen2.5-7B-Instruct --port 8000
+   ```
+
+2. Rust toolchain:
+   ```bash
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   ```
+
+### Running an Example
+
+```bash
+# Create a new project
+cargo new my-vllm-app
+cd my-vllm-app
+
+# Add dependencies
+cargo add vllm-client
+cargo add tokio --features full
+cargo add serde_json
+
+# Copy example code to src/main.rs
+# Then run:
+cargo run
+```
+
+## Common Patterns
+
+### Environment Configuration
 
 ```rust
-use vllm_client::{VllmClient, json, VllmError};
-use std::time::Duration;
-use tokio::time::sleep;
+use std::env;
+use vllm_client::VllmClient;
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = VllmClient::new("http://localhost:8000/v1")
-        .with_timeout(Duration::from_secs(60));
-    
-    let mut retries = 0;
-    let max_retries = 3;
-    
-    loop {
-        match client
-            .chat
-            .completions()
-            .create()
-            .model("llama-3-70b")
-            .messages(json!([
-                {"role": "user", "content": "Hello"}
-            ]))
-            .send()
-            .await
-        {
-            Ok(response) => {
-                println!("{}", response.choices[0].message.content.as_ref().unwrap());
-                break;
-            }
-            Err(VllmError::HttpError(_)) if retries < max_retries => {
-                retries += 1;
-                println!("Request failed, retrying... ({}/{})", retries, max_retries);
-                sleep(Duration::from_secs(2_u64.pow(retries))).await;
-            }
-            Err(e) => {
-                eprintln!("Error: {}", e);
-                return Err(e.into());
-            }
-        }
-    }
-    
-    Ok(())
+fn create_client() -> VllmClient {
+    VllmClient::builder()
+        .base_url(env::var("VLLM_BASE_URL")
+            .unwrap_or_else(|_| "http://localhost:8000/v1".to_string()))
+        .api_key(env::var("VLLM_API_KEY").ok())
+        .timeout_secs(300)
+        .build()
 }
 ```
 
----
+### Error Handling
 
-## More Examples
+```rust
+use vllm_client::{VllmClient, VllmError};
 
-See the `examples/` directory in the repository for complete runnable examples:
+async fn safe_chat(prompt: &str) -> Result<String, VllmError> {
+    let client = VllmClient::new("http://localhost:8000/v1");
+    
+    let response = client.chat.completions().create()
+        .model("Qwen/Qwen2.5-7B-Instruct")
+        .messages(json!([{"role": "user", "content": prompt}]))
+        .send()
+        .await?;
+    
+    Ok(response.content.unwrap_or_default())
+}
+```
 
-- `simple.rs` - Basic chat completion
-- `simple_streaming.rs` - Streaming chat
-- `streaming_chat.rs` - Streaming with thinking mode
-- `tool_calling.rs` - Tool calling example
+### Reusing Client
+
+```rust
+use std::sync::Arc;
+use vllm_client::VllmClient;
+
+// Share client across threads
+let client = Arc::new(VllmClient::new("http://localhost:8000/v1"));
+
+// Use in multiple async tasks
+let client1 = Arc::clone(&client);
+let client2 = Arc::clone(&client);
+```
+
+## See Also
+
+- [Getting Started](./getting-started.md) - Installation and setup
+- [API Reference](./api.md) - Detailed API documentation
+- [Advanced Topics](./advanced.md) - Advanced usage patterns

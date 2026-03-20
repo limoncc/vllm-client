@@ -1,271 +1,224 @@
 # Advanced Topics
 
-This section covers advanced features and configurations for the vLLM Client.
+This section covers advanced features and patterns for vLLM Client.
 
-## Table of Contents
+## Available Topics
 
-- [Thinking Mode](#thinking-mode)
-- [Custom Headers](#custom-headers)
-- [Timeouts & Retries](#timeouts--retries)
-- [Multi-modal Support](#multi-modal-support)
-- [Debugging](#debugging)
+| Topic | Description |
+|-------|-------------|
+| [Thinking Mode](./advanced/thinking-mode.md) | Reasoning models and thinking content |
+| [Custom Headers](./advanced/custom-headers.md) | Custom HTTP headers and authentication |
+| [Timeouts & Retries](./advanced/timeouts.md) | Timeout configuration and retry strategies |
 
 ## Thinking Mode
 
-Some models (like Qwen with thinking mode) can output reasoning/thinking content before the final response. The vLLM Client provides built-in support for parsing these reasoning tokens.
-
-### Enabling Thinking Mode
-
-For Qwen models, enable thinking mode via the `extra` parameter:
+For models that support reasoning (like Qwen with thinking mode), access the `reasoning_content` field:
 
 ```rust
 use vllm_client::{VllmClient, json, StreamEvent};
 use futures::StreamExt;
 
-let client = VllmClient::new("http://localhost:8000/v1");
-
-let mut stream = client
-    .chat
-    .completions()
-    .create()
-    .model("Qwen3-35B")
-    .messages(json!([
-        {"role": "user", "content": "Solve: What is 15 * 23?"}
-    ]))
-    .extra(json!({
-        "chat_template_kwargs": {
-            "enable_thinking": true
-        }
-    }))
+let mut stream = client.chat.completions().create()
+    .model("Qwen/Qwen2.5-72B-Instruct")
+    .messages(json!([{"role": "user", "content": "Solve this puzzle"}]))
+    .extra(json!({"chat_template_kwargs": {"think_mode": true}}))
     .stream(true)
     .send_stream()
     .await?;
 
 while let Some(event) = stream.next().await {
-    match &event {
-        StreamEvent::Reasoning(delta) => {
-            // Thinking/reasoning content
-            eprint!("[Thinking] {}", delta);
-        }
-        StreamEvent::Content(delta) => {
-            // Final response content
-            print!("{}", delta);
-        }
+    match event {
+        StreamEvent::Reasoning(delta) => eprintln!("[thinking] {}", delta),
+        StreamEvent::Content(delta) => print!("{}", delta),
         _ => {}
     }
 }
 ```
 
-### Reasoning vs Content
+## Custom Configuration
 
-| Event Type | Description |
-|------------|-------------|
-| `StreamEvent::Reasoning` | Internal reasoning/thinking process |
-| `StreamEvent::Content` | Final response content |
+### Environment-Based Configuration
 
-## Custom Headers
+```rust
+use std::env;
+use vllm_client::VllmClient;
 
-You can add custom headers to requests if needed:
+fn create_client() -> VllmClient {
+    VllmClient::builder()
+        .base_url(env::var("VLLM_BASE_URL")
+            .unwrap_or_else(|_| "http://localhost:8000/v1".to_string()))
+        .api_key(env::var("VLLM_API_KEY").ok())
+        .timeout_secs(env::var("VLLM_TIMEOUT")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(300))
+        .build()
+}
+```
+
+### Multiple Clients
 
 ```rust
 use vllm_client::VllmClient;
 
-let client = VllmClient::new("http://localhost:8000/v1")
-    .with_header("X-Custom-Header", "custom-value")
-    .with_header("X-Request-ID", "12345");
+let primary = VllmClient::new("http://primary-server:8000/v1");
+let fallback = VllmClient::new("http://fallback-server:8000/v1");
 ```
 
-### Common Use Cases
+## Production Patterns
 
-- Adding trace IDs for debugging
-- Custom authentication schemes
-- Rate limiting headers
+### Connection Pooling
 
-## Timeouts & Retries
-
-### Setting Timeouts
+The client reuses HTTP connections automatically. Create once and share:
 
 ```rust
-use std::time::Duration;
+use std::sync::Arc;
 use vllm_client::VllmClient;
 
-let client = VllmClient::new("http://localhost:8000/v1")
-    .with_timeout(Duration::from_secs(120)); // 2 minutes
+let client = Arc::new(VllmClient::new("http://localhost:8000/v1"));
+
+// Clone the Arc for each task
+let client1 = Arc::clone(&client);
+let client2 = Arc::clone(&client);
 ```
 
-### Implementing Retries
+### Graceful Shutdown
 
-For retry logic, use a crate like `tokio-retry` or implement your own:
+Handle graceful shutdown with channels:
 
 ```rust
-use std::time::Duration;
-use vllm_client::{VllmClient, json, VllmError};
+use tokio::signal;
+use tokio::sync::broadcast;
 
-async fn send_with_retry(
-    client: &VllmClient,
-    messages: serde_json::Value,
-    max_retries: u32,
-) -> Result<ChatCompletionResponse, VllmError> {
-    let mut attempts = 0;
-    
-    loop {
-        match client
-            .chat
-            .completions()
-            .create()
-            .model("llama-3-70b")
-            .messages(messages.clone())
-            .send()
-            .await
-        {
-            Ok(response) => return Ok(response),
-            Err(e) if attempts < max_retries => {
-                attempts += 1;
-                tokio::time::sleep(Duration::from_secs(2_u64.pow(attempts))).await;
-            }
-            Err(e) => return Err(e),
-        }
+let (shutdown_tx, _) = broadcast::channel::<()>(1);
+
+// In your request loop
+tokio::select! {
+    result = make_request(&client) => {
+        // Handle result
+    }
+    _ = shutdown_rx.recv() => {
+        println!("Shutting down gracefully");
+        break;
     }
 }
 ```
 
-## Multi-modal Support
+### Request Queuing
 
-### Sending Images
-
-For vision models, include images in your messages:
+For rate limiting, implement a queue:
 
 ```rust
-use vllm_client::{VllmClient, json};
+use tokio::sync::Semaphore;
 
-let client = VllmClient::new("http://localhost:8000/v1");
+let semaphore = Arc::new(Semaphore::new(10)); // Max 10 concurrent
 
-let response = client
-    .chat
-    .completions()
-    .create()
-    .model("llava-v1.6-34b")
-    .messages(json!([
-        {
-            "role": "user",
-            "content": [
-                {
-                    "type": "text",
-                    "text": "What's in this image?"
-                },
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": "https://example.com/image.jpg"
-                    }
-                }
-            ]
-        }
-    ]))
-    .send()
-    .await?;
-```
-
-### Base64 Images
-
-You can also use base64-encoded images:
-
-```rust
-let response = client
-    .chat
-    .completions()
-    .create()
-    .model("llava-v1.6-34b")
-    .messages(json!([
-        {
-            "role": "user",
-            "content": [
-                {
-                    "type": "text",
-                    "text": "Describe this image"
-                },
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": "data:image/jpeg;base64,/9j/4AAQ..."
-                    }
-                }
-            ]
-        }
-    ]))
-    .send()
-    .await?;
-```
-
-## Debugging
-
-### Enabling Debug Logging
-
-Enable debug logging to see request/response details:
-
-```rust
-use vllm_client::VllmClient;
-
-let client = VllmClient::new("http://localhost:8000/v1")
-    .with_debug(true);
-```
-
-### Inspecting Requests
-
-For more detailed debugging, you can use environment variables:
-
-```bash
-RUST_LOG=debug cargo run
-```
-
-Or use `tracing` crate for structured logging:
-
-```rust
-use tracing::{info, debug};
-
-info!("Sending request to vLLM");
-debug!("Request payload: {:?}", payload);
+async fn queued_request(client: &VllmClient, prompt: &str) -> Result<String, VllmError> {
+    let _permit = semaphore.acquire().await.unwrap();
+    client.chat.completions().create()
+        .model("Qwen/Qwen2.5-7B-Instruct")
+        .messages(json!([{"role": "user", "content": prompt}]))
+        .send()
+        .await
+        .map(|r| r.content.unwrap_or_default())
+}
 ```
 
 ## Performance Tips
 
-### Connection Pooling
+### 1. Reuse the Client
 
-The client automatically uses connection pooling via `reqwest`. To customize:
+Creating a client has some overhead. Reuse it across requests:
 
 ```rust
-use std::time::Duration;
-use vllm_client::VllmClient;
+// Good
+let client = VllmClient::new("http://localhost:8000/v1");
+for prompt in prompts {
+    let _ = client.chat.completions().create()...;
+}
 
+// Avoid
+for prompt in prompts {
+    let client = VllmClient::new("http://localhost:8000/v1"); // Inefficient!
+    let _ = client.chat.completions().create()...;
+}
+```
+
+### 2. Use Streaming for Long Responses
+
+Get faster time-to-first-token with streaming:
+
+```rust
+// Faster perceived latency
+let mut stream = client.chat.completions().create()
+    .stream(true)
+    .send_stream()
+    .await?;
+```
+
+### 3. Set Appropriate Timeouts
+
+Match timeout to expected response time:
+
+```rust
+// Short queries
 let client = VllmClient::new("http://localhost:8000/v1")
-    .with_pool_max_idle_per_host(10)
-    .with_pool_idle_timeout(Duration::from_secs(90));
+    .timeout_secs(30);
+
+// Long generation tasks
+let client = VllmClient::new("http://localhost:8000/v1")
+    .timeout_secs(600);
 ```
 
-### Streaming vs Non-Streaming
+### 4. Batch Requests
 
-- Use **streaming** for long-running responses to get immediate feedback
-- Use **non-streaming** for batch processing or when you need the complete response at once
-
-### Batch Processing
-
-For processing multiple requests concurrently:
+Process multiple prompts concurrently:
 
 ```rust
-use futures::future::join_all;
+use futures::stream::{self, StreamExt};
 
-let tasks: Vec<_> = prompts
-    .iter()
-    .map(|prompt| {
-        client
-            .chat
-            .completions()
-            .create()
-            .model("llama-3-70b")
-            .messages(json!([{"role": "user", "content": prompt}]))
+let prompts = vec!["Hello", "Hi", "Hey"];
+let results: Vec<_> = stream::iter(prompts)
+    .map(|p| async {
+        client.chat.completions().create()
+            .model("Qwen/Qwen2.5-7B-Instruct")
+            .messages(json!([{"role": "user", "content": p}]))
             .send()
+            .await
     })
-    .collect();
-
-let results = join_all(tasks).await;
+    .buffer_unordered(5) // Max 5 concurrent
+    .collect()
+    .await;
 ```
+
+## Security Considerations
+
+### API Key Storage
+
+Never hardcode API keys:
+
+```rust
+// Good: Use environment variables
+let api_key = std::env::var("VLLM_API_KEY")?;
+
+// Avoid: Hardcoded keys
+let api_key = "sk-secret-key"; // DON'T DO THIS!
+```
+
+### TLS Verification
+
+The client uses `reqwest` which verifies TLS certificates by default. For development with self-signed certificates:
+
+```rust
+// Use a custom HTTP client if needed
+let http = reqwest::Client::builder()
+    .danger_accept_invalid_certs(true) // Only for development!
+    .timeout(std::time::Duration::from_secs(300))
+    .build()?;
+```
+
+## See Also
+
+- [API Reference](./api.md) - Complete API documentation
+- [Examples](./examples.md) - Practical code examples
+- [Error Handling](./api/error-handling.md) - Error handling strategies

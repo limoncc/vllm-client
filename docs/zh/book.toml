@@ -1,7 +1,6 @@
 [book]
 authors = ["limoncc"]
 language = "zh-CN"
-multilingual = false
 src = "src"
 title = "vLLM Client - vLLM API 的 Rust 客户端"
 description = "一个兼容 OpenAI 接口的 vLLM API Rust 客户端库"
@@ -9,7 +8,7 @@ rust-version = "1.70"
 
 [build]
 build-dir = "book"
-create-missing = false
+create-missing = true
 
 [output.html]
 git-repository-url = "https://github.com/limoncc/vllm-client"
@@ -17,6 +16,7 @@ edit-url-template = "https://github.com/limoncc/vllm-client/edit/main/docs/zh/{p
 site-url = "/vllm-client/zh/"
 cname = "limoncc.github.io"
 additional-css = ["../theme/custom.css"]
+additional-js = ["../theme/custom.js"]
 default-theme = "rust"
 preferred-dark-theme = "ayu"
 smart-punctuation = true
@@ -32,4 +32,5 @@ enable = true
 level = 1
 
 [output.linkcheck]
+optional = true
 follow-web-links = true
