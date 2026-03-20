@@ -111,7 +111,7 @@ impl ToolCall {
 // ============================================================================
 
 /// Token 使用统计
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Usage {
     /// 输入 token 数
     pub prompt_tokens: u64,

@@ -24,6 +24,10 @@ path = "tests/test_chat_request.rs"
 name = "test_chat_response"
 path = "tests/test_chat_response.rs"
 
+[[test]]
+name = "test_legacy_completions"
+path = "tests/test_legacy_completions.rs"
+
 [dependencies]
 # HTTP client
 reqwest = { version = "0.12", default-features = false, features = [
