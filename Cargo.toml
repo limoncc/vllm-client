@@ -36,6 +36,10 @@ path = "tests/integration/real_vllm.rs"
 name = "test_stream_parse"
 path = "tests/test_stream_parse.rs"
 
+[[test]]
+name = "test_tool_definition"
+path = "tests/test_tool_definition.rs"
+
 [dependencies]
 # HTTP client
 reqwest = { version = "0.12", default-features = false, features = [
