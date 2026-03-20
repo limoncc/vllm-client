@@ -510,12 +510,12 @@ Test: test_real_tool_calling
 - [x] 所有测试通过
 
 ### Phase 2 Chat Completions
-- [ ] 实现 ChatCompletionsRequest
-- [ ] 实现 ChatCompletionResponse
-- [ ] 实现 .create() 构建器
-- [ ] 实现 .send() 方法
-- [ ] 支持所有参数
-- [ ] 所有测试通过
+- [x] 实现 ChatCompletionsRequest
+- [x] 实现 ChatCompletionResponse
+- [x] 实现 .create() 构建器
+- [ ] 实现 .send() 方法 (Phase 2.3 - 需要 mock server)
+- [x] 支持所有参数
+- [ ] 所有测试通过 (Phase 2.1-2.2 通过，共25个测试)
 
 ### Phase 3 流式响应
 - [ ] 实现 SSE 解析
@@ -614,8 +614,23 @@ wiremock = "0.6"  # HTTP mock server
 
 ### Day 2: Phase 2.1-2.2 - Chat Completions 基础
 - 工作内容：
+  - 创建 test_chat_request.rs，包含 9 个测试用例
+  - 测试请求构建的所有参数（model, messages, temperature, max_tokens, top_p, top_k, stop, stream, tools, tool_choice, extra）
+  - 测试链式调用、JSON 格式验证、多模态消息格式
+  - 创建 test_chat_response.rs，包含 16 个测试用例
+  - 测试响应解析（简单响应、推理内容、空内容、usage）
+  - 测试工具调用解析（单个和多个工具调用）
+  - 测试工具参数解析（JSON 解析、结构体解析、错误处理）
+  - 测试 assistant_message()、first_tool_call()、tool result message
+  - 将测试定义添加到 Cargo.toml
 - 测试结果：
+  - Phase 2.1 (test_chat_request): 9个测试通过
+  - Phase 2.2 (test_chat_response): 16个测试通过
+  - Phase 2 总计: 25个新测试通过
+  - 全部测试总计: 66个测试通过（Phase 1 + Phase 2 + 文档测试）
 - 遇到问题：
+  - json 宏重复导入问题（serde_json::json 和 vllm_client::json）
+  - 已通过移除重复导入解决
 
 ### Day 3: Phase 2.3 - HTTP 调用
 - 工作内容：
