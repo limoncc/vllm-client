@@ -18,7 +18,6 @@ additional-js = ["../theme/custom.js"]
 default-theme = "rust"
 preferred-dark-theme = "ayu"
 smart-punctuation = true
-copy-fonts = true
 
 [output.html.search]
 enable = true
