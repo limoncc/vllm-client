@@ -5,7 +5,6 @@ language = "en"
 src = "src"
 title = "vLLM Client - Rust Client for vLLM API"
 description = "A Rust client library for vLLM API with OpenAI-compatible interface"
-rust-version = "1.70"
 
 [build]
 build-dir = "book"

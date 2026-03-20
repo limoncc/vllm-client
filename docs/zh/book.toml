@@ -4,7 +4,6 @@ language = "zh-CN"
 src = "src"
 title = "vLLM Client - vLLM API 的 Rust 客户端"
 description = "一个兼容 OpenAI 接口的 vLLM API Rust 客户端库"
-rust-version = "1.70"
 
 [build]
 build-dir = "book"
