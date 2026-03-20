@@ -38,6 +38,16 @@ jobs:
         run: mdbook build docs
         working-directory: .
 
+      - name: Move English docs to root
+        run: |
+          # Move English docs from html/ subdirectory to root
+          shopt -s dotglob
+          mv docs/book/html/* docs/book/
+          rmdir docs/book/html
+          # Remove linkcheck directory if exists
+          rm -rf docs/book/linkcheck
+        shell: bash
+
       - name: Build Chinese docs
         run: |
           mkdir -p docs/book/zh
