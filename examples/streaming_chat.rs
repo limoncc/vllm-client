@@ -10,6 +10,10 @@
 use std::io::Write;
 use vllm_client::{json, StreamEvent, VllmClient};
 
+// ANSI 颜色码
+const COLOR_GRAY: &str = "\x1b[90m"; // 灰色（用于思考内容）
+const COLOR_RESET: &str = "\x1b[0m"; // 重置颜色
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 使用用户提供的配置创建客户端
@@ -48,13 +52,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     while let Some(event) = stream.next().await {
         match event {
             StreamEvent::Content(delta) => {
-                // 如果之前在输出思考内容，现在切换到普通内容，先换行
+                // 如果之前在输出思考内容，现在切换到普通内容
                 if in_reasoning {
+                    // 先重置颜色，然后换行
+                    println!("{}", COLOR_RESET);
                     println!();
                     in_reasoning = false;
                 }
 
-                // 第一次输出普通内容时不需要特殊处理
+                // 标记正在输出普通内容
                 in_content = true;
 
                 // 打印内容增量（实时输出）
@@ -63,24 +69,29 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 std::io::stdout().flush().ok();
             }
             StreamEvent::Reasoning(delta) => {
-                // 如果之前在输出普通内容，现在切换到思考内容，先换行
+                // 如果之前在输出普通内容，现在切换到思考内容
                 if in_content {
                     println!();
                     in_content = false;
                 }
 
-                // 第一次输出思考内容时打印标记
+                // 第一次输出思考内容时打印标记并设置灰色
                 if !in_reasoning {
-                    print!("[思考] ");
+                    print!("{}[思考] ", COLOR_GRAY);
                     std::io::stdout().flush().ok();
                     in_reasoning = true;
                 }
 
-                // 打印思考内容增量
+                // 打印思考内容增量（灰色）
                 print!("{}", delta);
                 std::io::stdout().flush().ok();
             }
             StreamEvent::Usage(usage) => {
+                // 如果之前在思考模式，先重置颜色
+                if in_reasoning {
+                    println!("{}", COLOR_RESET);
+                }
+
                 // 流结束时输出 token 使用统计
                 println!("\n\n--- Token 使用统计 ---");
                 println!("提示词 tokens: {}", usage.prompt_tokens);
@@ -88,10 +99,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("总计 tokens: {}", usage.total_tokens);
             }
             StreamEvent::Done => {
+                // 确保重置颜色
+                if in_reasoning {
+                    print!("{}", COLOR_RESET);
+                    std::io::stdout().flush().ok();
+                }
                 println!("\n\n=== 聊天完成 ===");
                 break;
             }
             StreamEvent::Error(e) => {
+                // 确保重置颜色
+                if in_reasoning {
+                    print!("{}", COLOR_RESET);
+                    std::io::stdout().flush().ok();
+                }
                 eprintln!("\n错误: {}", e);
                 return Err(e.into());
             }
