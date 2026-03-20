@@ -315,8 +315,11 @@ impl MessageStream {
                                                     }
                                                 }
 
-                                                // 推理内容
-                                                if let Some(reasoning) = delta.get("reasoning_content").and_then(|c| c.as_str()) {
+                                                // 推理内容 - 支持 "reasoning" 和 "reasoning_content" 两种字段名
+                                                let reasoning = delta.get("reasoning").and_then(|c| c.as_str())
+                                                    .or_else(|| delta.get("reasoning_content").and_then(|c| c.as_str()));
+
+                                                if let Some(reasoning) = reasoning {
                                                     if !reasoning.is_empty() {
                                                         yield StreamEvent::Reasoning(reasoning.to_string());
                                                     }
