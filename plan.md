@@ -503,11 +503,11 @@ Test: test_real_tool_calling
 ## 四、开发检查清单
 
 ### Phase 1 基础架构
-- [ ] 创建 Cargo.toml
-- [ ] 实现 VllmClient 结构体
-- [ ] 实现客户端初始化方法
-- [ ] 实现 VllmError 错误类型
-- [ ] 所有测试通过
+- [x] 创建 Cargo.toml
+- [x] 实现 VllmClient 结构体
+- [x] 实现客户端初始化方法
+- [x] 实现 VllmError 错误类型
+- [x] 所有测试通过
 
 ### Phase 2 Chat Completions
 - [ ] 实现 ChatCompletionsRequest
@@ -594,8 +594,23 @@ wiremock = "0.6"  # HTTP mock server
 
 ### Day 1: Phase 1 - 基础架构
 - 工作内容：
+  - 创建项目基础结构（Cargo.toml, .gitignore, README.md）
+  - 实现 VllmClient 结构体，支持多种初始化方式（new, builder, default）
+  - 实现客户端配置（API key, timeout）
+  - 实现 VllmError 错误类型，包含多种错误场景
+  - 添加 is_retryable() 方法用于重试逻辑
+  - 编写 31 个测试用例并全部通过
+  - 修复文档测试问题，使用 no_run 避免实际 HTTP 调用
 - 测试结果：
+  - 单元测试：5个通过
+  - test_client_init：10个通过
+  - test_error：16个通过
+  - 文档测试：10个通过，5个忽略
+  - 总计：31个测试通过
 - 遇到问题：
+  - 文档测试初期的 API 设计一致性问题（api_key vs with_api_key）
+  - 文档测试的 HTML 实体转义问题
+  - 所有问题均已解决
 
 ### Day 2: Phase 2.1-2.2 - Chat Completions 基础
 - 工作内容：
