@@ -13,7 +13,6 @@ create-missing = true
 git-repository-url = "https://github.com/limoncc/vllm-client"
 edit-url-template = "https://github.com/limoncc/vllm-client/edit/main/docs/zh/{path}"
 site-url = "/vllm-client/zh/"
-cname = "limoncc.github.io"
 additional-css = ["../theme/custom.css"]
 additional-js = ["../theme/custom.js"]
 default-theme = "rust"
