@@ -136,11 +136,6 @@ impl VllmClient {
     pub fn builder() -> VllmClientBuilder {
         VllmClientBuilder::default()
     }
-
-    /// Get reference to the underlying HTTP client
-    pub(crate) fn http(&self) -> &Client {
-        &self.http
-    }
 }
 
 impl Default for VllmClient {

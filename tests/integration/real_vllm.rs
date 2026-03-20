@@ -118,7 +118,7 @@ async fn test_real_multi_turn_conversation() {
 #[tokio::test]
 #[ignore]
 async fn test_real_streaming() {
-    use futures::StreamExt;
+    // use futures::StreamExt;
     use vllm_client::StreamEvent;
 
     let client = create_client();

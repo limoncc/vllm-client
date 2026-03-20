@@ -103,6 +103,3 @@ impl VllmError {
         }
     }
 }
-
-/// Result type alias for VllmError
-pub type Result<T> = std::result::Result<T, VllmError>;
