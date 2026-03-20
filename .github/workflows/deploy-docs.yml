@@ -1,0 +1,67 @@
+name: Deploy Docs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - '.github/workflows/deploy-docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install mdBook
+        run: cargo install mdbook
+
+      - name: Build English docs
+        run: mdbook build docs
+        working-directory: .
+
+      - name: Build Chinese docs
+        run: |
+          mkdir -p docs/book/zh
+          mdbook build docs/zh -d ../book/zh
+        working-directory: .
+
+      - name: Add language switcher
+        run: |
+          # Add language switcher to all HTML files
+          find docs/book -name "*.html" -exec sed -i 's|</head>|<style>.lang-switch{position:fixed;top:10px;right:60px;z-index:100;font-size:14px}.lang-switch a{padding:4px 8px;margin:0 2px;border-radius:4px;text-decoration:none;background:#f0f0f0}.lang-switch a:hover{background:#ddd}</style></head>|' {} \;
+          find docs/book -name "*.html" -exec sed -i 's|<body>|<body><div class="lang-switch"><a href="/vllm-client/">English</a><a href="/vllm-client/zh/">中文</a></div>|' {} \;
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'docs/book'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

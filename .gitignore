@@ -27,6 +27,7 @@ coverage/
 
 # Documentation
 /doc/
+/docs/book/
 
 # Environment
 .env

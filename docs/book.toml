@@ -1,0 +1,37 @@
+[book]
+authors = ["limoncc"]
+language = "en"
+multilingual = false
+src = "src"
+title = "vLLM Client - Rust Client for vLLM API"
+description = "A Rust client library for vLLM API with OpenAI-compatible interface"
+rust-version = "1.70"
+
+[build]
+build-dir = "book"
+create-missing = false
+
+[output.html]
+git-repository-url = "https://github.com/limoncc/vllm-client"
+edit-url-template = "https://github.com/limoncc/vllm-client/edit/main/docs/{path}"
+site-url = "/vllm-client/"
+cname = "limoncc.github.io"
+additional-css = ["theme/custom.css"]
+additional-js = ["theme/custom.js"]
+default-theme = "rust"
+preferred-dark-theme = "ayu"
+smart-punctuation = true
+mathjax-support = false
+copy-fonts = true
+
+[output.html.search]
+enable = true
+limit-results = 30
+use-boolean-and = true
+
+[output.html.fold]
+enable = true
+level = 1
+
+[output.linkcheck]
+follow-web-links = true

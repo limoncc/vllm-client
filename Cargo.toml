@@ -2,11 +2,15 @@
 name = "vllm-client"
 version = "0.1.0"
 edition = "2021"
+authors = ["limoncc"]
 description = "A Rust client for vLLM OpenAI-compatible API"
-repository = "https://github.com/your-org/vllm-client"
-license = "MIT"
-keywords = ["ai", "client", "llm", "openai", "vllm"]
-categories = ["api-bindings", "web-programming"]
+documentation = "https://limoncc.github.io/vllm-client"
+repository = "https://github.com/limoncc/vllm-client"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+keywords = ["ai", "client", "llm", "openai", "vllm", "chat", "streaming"]
+categories = ["api-bindings", "web-programming::http-client", "asynchronous"]
+exclude = ["/docs", "/tests", "/examples", ".github"]
 
 [[test]]
 name = "test_client_init"
@@ -83,3 +87,6 @@ tokio = { version = "1.0", features = ["macros", "rt-multi-thread", "time"] }
 
 [features]
 default = []
+
+[lsp]
+document-link.enabled = false

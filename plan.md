@@ -759,3 +759,72 @@ wiremock = "0.6"  # HTTP mock server
 4. **错误处理优先**
    - 每种错误场景都要有测试
    - 错误信息要清晰有用
+
+---
+
+## 九、文档与发布
+
+### 9.1 mdBook 文档
+
+在 `docs/` 目录下使用 mdBook 创建中英文文档：
+
+```
+docs/
+├── book.toml          # mdBook 配置
+├── src/
+│   ├── SUMMARY.md     # 目录
+│   ├── README.md      # 首页
+│   ├── getting-started.md
+│   ├── api.md
+│   ├── examples.md
+│   └── ...
+└── src/zh/            # 中文文档
+    ├── SUMMARY.md
+    ├── README.md
+    └── ...
+```
+
+### 9.2 GitHub Pages 部署
+
+1. 创建 `gh-pages` 分支或使用 `docs/` 目录
+2. 在 GitHub 仓库 Settings -> Pages 启用
+3. 配置 GitHub Actions 自动部署
+4. 文档地址: `https://limoncc.github.io/vllm-client`
+
+### 9.3 crates.io 发布
+
+在 `Cargo.toml` 中配置：
+
+```toml
+[package]
+name = "vllm-client"
+version = "0.1.0"
+edition = "2021"
+authors = ["limoncc"]
+license = "MIT OR Apache-2.0"
+description = "A Rust client for vLLM API"
+documentation = "https://limoncc.github.io/vllm-client"
+repository = "https://github.com/limoncc/vllm-client"
+readme = "README.md"
+keywords = ["vllm", "llm", "openai", "ai", "client"]
+categories = ["api-bindings", "web-programming"]
+```
+
+发布命令：
+
+```bash
+# 登录 crates.io
+cargo login
+
+# 发布
+cargo publish
+```
+
+### 9.4 检查清单
+
+- [ ] 安装 mdBook: `cargo install mdbook`
+- [ ] 初始化 mdBook: `mdbook init docs`
+- [ ] 编写中英文文档内容
+- [ ] 配置 GitHub Pages
+- [ ] 更新 Cargo.toml 元数据
+- [ ] 发布到 crates.io

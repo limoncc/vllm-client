@@ -1,0 +1,75 @@
+/* Custom theme for vLLM Client documentation */
+
+/* Improve code block styling */
+pre code {
+    border-radius: 4px;
+}
+
+/* Better table styling */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+}
+
+table th, table td {
+    padding: 0.5em 1em;
+    border: 1px solid var(--table-border-color);
+}
+
+table th {
+    background-color: var(--table-header-bg);
+}
+
+/* Warning/Note boxes */
+.warning, .note {
+    padding: 1em;
+    border-radius: 4px;
+    margin: 1em 0;
+}
+
+.warning {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+}
+
+.note {
+    background-color: #e7f5ff;
+    border-left: 4px solid #0d6efd;
+}
+
+/* Language selector styling */
+.language-selector {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 100;
+}
+
+.language-selector a {
+    padding: 0.3em 0.6em;
+    margin: 0 0.2em;
+    border-radius: 4px;
+    text-decoration: none;
+}
+
+.language-selector a.active {
+    background-color: var(--sidebar-active);
+}
+
+/* Improved navigation */
+.menu-title {
+    font-weight: bold;
+}
+
+/* Better code highlighting for Rust */
+.rust {
+    color: #000;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1080px) {
+    .warning, .note {
+        margin: 0.5em;
+    }
+}
