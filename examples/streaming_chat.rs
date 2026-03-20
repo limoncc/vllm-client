@@ -38,6 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             {"role": "system", "content": "你是一个友好的AI助手, 你思考和说话以简洁著称。很少废话，你使用中文思考和回复"},
             {"role": "user", "content": "什么是机器学习,一句话说明即可。"}
         ]))
+        .extra(json!({"chat_template_kwargs": {"enable_thinking": false}}))
         .temperature(0.7)
         .max_tokens(2000)
         .stream(true)

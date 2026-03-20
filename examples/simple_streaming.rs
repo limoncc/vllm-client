@@ -20,11 +20,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
 
     while let Some(event) = stream.next().await {
-        if let StreamEvent::Content(delta) = event {
-            print!("{}", delta);
+        match &event {
+            StreamEvent::Reasoning(delta) => print!("{}", delta),
+            StreamEvent::Content(delta) => print!("{}", delta),
+            _ => {}
         }
     }
-
     println!();
     Ok(())
 }
