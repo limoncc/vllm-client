@@ -29,7 +29,3 @@ use-boolean-and = true
 [output.html.fold]
 enable = true
 level = 1
-
-[output.linkcheck]
-optional = true
-follow-web-links = true

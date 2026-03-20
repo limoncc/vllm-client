@@ -34,9 +34,6 @@ jobs:
       - name: Install mdBook
         run: cargo install mdbook
 
-      - name: Install mdbook-linkcheck
-        run: cargo install mdbook-linkcheck
-
       - name: Build English docs
         run: mdbook build docs
         working-directory: .
