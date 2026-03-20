@@ -1,0 +1,49 @@
+[package]
+name = "vllm-client"
+version = "0.1.0"
+edition = "2021"
+description = "A Rust client for vLLM OpenAI-compatible API"
+repository = "https://github.com/your-org/vllm-client"
+license = "MIT"
+keywords = ["ai", "client", "llm", "openai", "vllm"]
+categories = ["api-bindings", "web-programming"]
+
+[[test]]
+name = "test_client_init"
+path = "tests/test_client_init.rs"
+
+[[test]]
+name = "test_error"
+path = "tests/test_error.rs"
+
+[dependencies]
+# HTTP client
+reqwest = { version = "0.12", default-features = false, features = [
+  "json",
+  "rustls-tls",
+  "stream"
+] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+async-stream = "0.3"
+futures = "0.3"
+# Async runtime
+tokio = { version = "1.0", features = ["rt", "sync"] }
+tokio-stream = "0.1"
+
+# Utilities
+bytes = "1.0"
+pin-project-lite = "0.2"
+thiserror = "2.0"
+
+[dev-dependencies]
+pretty_assertions = "1.4"
+# Testing
+tokio = { version = "1.0", features = ["macros", "rt-multi-thread", "time"] }
+# wiremock = "0.6"  # 暂时注释掉，需要 nightly Rust。Phase 2-3 需要时再启用
+
+[features]
+default = []
