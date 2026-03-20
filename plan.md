@@ -820,26 +820,26 @@ docs/
 |------|----------|------|
 | `README.md` | 项目简介、核心功能列表、快速示例、许可证 | ✅ 已完成 |
 | `getting-started.md` | 安装和快速开始概述 | ✅ 已完成 |
-| `getting-started/installation.md` | Cargo 安装、依赖配置、Rust 版本要求 | ⬜ 待编写 |
-| `getting-started/quick-start.md` | 基础聊天气配示例、环境准备 | ⬜ 待编写 |
-| `getting-started/configuration.md` | API Key、超时、Base URL 配置 | ⬜ 待编写 |
-| `api.md` | API 模块概述、设计理念 | ⬜ 待编写 |
-| `api/client.md` | VllmClient 结构体、builder 模式、所有方法 | ⬜ 待编写 |
-| `api/chat-completions.md` | ChatCompletionsRequest 所有参数、响应结构 | ⬜ 待编写 |
-| `api/streaming.md` | MessageStream、StreamEvent 枚举、使用示例 | ⬜ 待编写 |
-| `api/tool-calling.md` | ToolCall 结构体、工具定义、结果返回 | ⬜ 待编写 |
-| `api/error-handling.md` | VllmError 枚举、错误处理最佳实践 | ⬜ 待编写 |
-| `examples.md` | 示例概述、代码仓库链接 | ⬜ 待编写 |
-| `examples/basic-chat.md` | 完整基础聊天示例 | ⬜ 待编写 |
-| `examples/streaming-chat.md` | 流式响应完整示例 | ⬜ 待编写 |
-| `examples/tool-calling.md` | 函数调用完整示例 | ⬜ 待编写 |
-| `examples/multimodal.md` | 图像输入示例（如支持） | ⬜ 待编写 |
-| `advanced.md` | 高级功能概述 | ⬜ 待编写 |
-| `advanced/thinking-mode.md` | Qwen 思考模式、reasoning_content 处理 | ⬜ 待编写 |
-| `advanced/custom-headers.md` | 自定义 HTTP 头、认证扩展 | ⬜ 待编写 |
-| `advanced/timeouts.md` | 超时配置、重试策略 | ⬜ 待编写 |
-| `contributing.md` | 贡献流程、代码规范、PR 指南 | ⬜ 待编写 |
-| `changelog.md` | 版本历史、变更记录 | ⬜ 待编写 |
+| `getting-started/installation.md` | Cargo 安装、依赖配置、Rust 版本要求 | ✅ 已完成 |
+| `getting-started/quick-start.md` | 基础聊天气配示例、环境准备 | ✅ 已完成 |
+| `getting-started/configuration.md` | API Key、超时、Base URL 配置 | ✅ 已完成 |
+| `api.md` | API 模块概述、设计理念 | ✅ 已完成 |
+| `api/client.md` | VllmClient 结构体、builder 模式、所有方法 | ✅ 已完成 |
+| `api/chat-completions.md` | ChatCompletionsRequest 所有参数、响应结构 | ✅ 已完成 |
+| `api/streaming.md` | MessageStream、StreamEvent 枚举、使用示例 | ✅ 已完成 |
+| `api/tool-calling.md` | ToolCall 结构体、工具定义、结果返回 | ✅ 已完成 |
+| `api/error-handling.md` | VllmError 枚举、错误处理最佳实践 | ✅ 已完成 |
+| `examples.md` | 示例概述、代码仓库链接 | ✅ 已完成 |
+| `examples/basic-chat.md` | 完整基础聊天示例 | ✅ 已完成 |
+| `examples/streaming-chat.md` | 流式响应完整示例 | ✅ 已完成 |
+| `examples/tool-calling.md` | 函数调用完整示例 | ✅ 已完成 |
+| `examples/multimodal.md` | 图像输入示例（如支持） | ✅ 已完成 |
+| `advanced.md` | 高级功能概述 | ✅ 已完成 |
+| `advanced/thinking-mode.md` | Qwen 思考模式、reasoning_content 处理 | ✅ 已完成 |
+| `advanced/custom-headers.md` | 自定义 HTTP 头、认证扩展 | ✅ 已完成 |
+| `advanced/timeouts.md` | 超时配置、重试策略 | ✅ 已完成 |
+| `contributing.md` | 贡献流程、代码规范、PR 指南 | ✅ 已完成 |
+| `changelog.md` | 版本历史、变更记录 | ✅ 已完成 |
 
 #### 9.2.2 中文文档内容
 
@@ -847,24 +847,24 @@ docs/
 
 | 文件 | 内容要点 | 状态 |
 |------|----------|------|
-| `README.md` | 项目简介、核心功能列表、快速示例 | ⬜ 待编写 |
-| `getting-started/installation.md` | 安装说明、依赖配置 | ⬜ 待编写 |
-| `getting-started/quick-start.md` | 快速上手指南 | ⬜ 待编写 |
-| `getting-started/configuration.md` | 配置选项说明 | ⬜ 待编写 |
-| `api/client.md` | 客户端 API 文档 | ⬜ 待编写 |
-| `api/chat-completions.md` | 聊天补全 API 文档 | ⬜ 待编写 |
-| `api/streaming.md` | 流式响应 API 文档 | ⬜ 待编写 |
-| `api/tool-calling.md` | 工具调用 API 文档 | ⬜ 待编写 |
-| `api/error-handling.md` | 错误处理文档 | ⬜ 待编写 |
-| `examples/basic-chat.md` | 基础聊天示例 | ⬜ 待编写 |
-| `examples/streaming-chat.md` | 流式聊天示例 | ⬜ 待编写 |
-| `examples/tool-calling.md` | 工具调用示例 | ⬜ 待编写 |
-| `examples/multimodal.md` | 多模态示例 | ⬜ 待编写 |
-| `advanced/thinking-mode.md` | 思考模式文档 | ⬜ 待编写 |
-| `advanced/custom-headers.md` | 自定义请求头文档 | ⬜ 待编写 |
-| `advanced/timeouts.md` | 超时与重试文档 | ⬜ 待编写 |
-| `contributing.md` | 贡献指南 | ⬜ 待编写 |
-| `changelog.md` | 更新日志 | ⬜ 待编写 |
+| `README.md` | 项目简介、核心功能列表、快速示例 | ✅ 已完成 |
+| `getting-started/installation.md` | 安装说明、依赖配置 | ✅ 已完成 |
+| `getting-started/quick-start.md` | 快速上手指南 | ✅ 已完成 |
+| `getting-started/configuration.md` | 配置选项说明 | ✅ 已完成 |
+| `api/client.md` | 客户端 API 文档 | ✅ 已完成 |
+| `api/chat-completions.md` | 聊天补全 API 文档 | ✅ 已完成 |
+| `api/streaming.md` | 流式响应 API 文档 | ✅ 已完成 |
+| `api/tool-calling.md` | 工具调用 API 文档 | ✅ 已完成 |
+| `api/error-handling.md` | 错误处理文档 | ✅ 已完成 |
+| `examples/basic-chat.md` | 基础聊天示例 | ✅ 已完成 |
+| `examples/streaming-chat.md` | 流式聊天示例 | ✅ 已完成 |
+| `examples/tool-calling.md` | 工具调用示例 | ✅ 已完成 |
+| `examples/multimodal.md` | 多模态示例 | ✅ 已完成 |
+| `advanced/thinking-mode.md` | 思考模式文档 | ✅ 已完成 |
+| `advanced/custom-headers.md` | 自定义请求头文档 | ✅ 已完成 |
+| `advanced/timeouts.md` | 超时与重试文档 | ✅ 已完成 |
+| `contributing.md` | 贡献指南 | ✅ 已完成 |
+| `changelog.md` | 更新日志 | ✅ 已完成 |
 
 ### 9.3 文档构建与测试
 
