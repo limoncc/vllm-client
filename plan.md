@@ -539,8 +539,14 @@ Test: test_real_tool_calling
 
 ### Phase 6 集成测试
 - [ ] Mock 服务端测试通过
-- [ ] 真实 vLLM 测试通过
-- [ ] 文档完善
+- [x] 真实 vLLM 测试通过
+- [x] 文档完善
+
+### Bug 修复
+- [x] MessageStream reasoning 字段解析问题
+  - 问题：Qwen3.5-35B-A3B 模型使用 "reasoning" 字段，而不是 "reasoning_content"
+  - 修复：同时检查 "reasoning" 和 "reasoning_content" 两个_field_名
+  - 影响：流式响应现在能正确捕获推理内容
 
 ---
 
@@ -632,10 +638,24 @@ wiremock = "0.6"  # HTTP mock server
   - json 宏重复导入问题（serde_json::json 和 vllm_client::json）
   - 已通过移除重复导入解决
 
-### Day 3: Phase 2.3 - HTTP 调用
+### Day 3: Phase 6 - 集成测试
 - 工作内容：
+  - 创建 tests/integration/real_vllm.rs 集成测试文件
+  - 添加 10 个使用真实 vLLM 服务的集成测试
+  - 测试基本聊天补全、多轮对话、流式响应、参数测试、并发请求等
+  - 修复 MessageStream 的 reasoning 字段解析问题
+  - 为 Usage 结构体添加 PartialEq derive
+  - 所有测试使用提供的 vLLM 服务器配置
 - 测试结果：
+  - 所有 79 个单元测试通过
+  - 集成测试在真实 Qwen3.5-35B-A3B 模型上验证通过
+  - 流式响应现在能正确捕获推理内容（reasoning）
+  - test_real_chat_completion 测试通过（0.18秒）
+  - test_real_streaming 测试通过（2.21秒）
 - 遇到问题：
+  - MessageStream 无法解析推理内容
+  - 原因：Qwen 模型使用 "reasoning" 字段，而不是 "reasoning_content"
+  - 解决：同时检查两个字段名，兼容不同 API 实现
 
 ### Day 4: Phase 3 - 流式响应
 - 工作内容：
@@ -654,6 +674,9 @@ wiremock = "0.6"  # HTTP mock server
 
 ### Day 7: Phase 6 - 集成测试
 - 工作内容：
+  - 完善集成测试覆盖
+  - 添加更多边界用例测试
+  - 性能测试和优化
 - 测试结果：
 - 遇到问题：
 
