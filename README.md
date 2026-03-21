@@ -1,5 +1,138 @@
 # VLLM Client
 
+A Rust client library for vLLM inference engine with OpenAI-compatible API.
+
+## Design Philosophy
+
+- **Python Compatible**: API style aligns with openai-python, reducing migration cost
+- **Flexibility First**: Both input and output support `serde_json::Value`, maximizing flexibility
+- **Minimal Abstraction**: No over-encapsulation, let users work directly with JSON
+- **Convenience Helpers**: Provide parsing helper methods, but don't force their use
+
+## Features
+
+- ✅ Chat Completions API (`/v1/chat/completions`)
+- ✅ Legacy Completions API (`/v1/completions`)
+- ✅ Streaming Response (SSE)
+- ✅ Tool Calling (Function Calling)
+- ✅ Multimodal Support (Image Input)
+- ✅ Thinking Mode (vLLM Reasoning Models Extension)
+
+## Installation
+
+```toml
+[dependencies]
+vllm-client = "0.1"
+```
+
+## Quick Start
+
+### Simple Chat
+
+```rust
+use vllm_client::*;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = VllmClient::new("http://localhost:8000/v1");
+
+    let response = client.chat.completions.create()
+        .model("Qwen/Qwen2.5-72B-Instruct")
+        .messages(json!([
+            {"role": "user", "content": "Hello, tell me about yourself"}
+        ]))
+        .temperature(0.7)
+        .max_tokens(512)
+        .send()
+        .await?;
+
+    println!("{}", response.content.unwrap());
+    Ok(())
+}
+```
+
+### Streaming
+
+```rust
+let mut stream = client.chat.completions.create()
+    .model("Qwen/Qwen2.5-72B-Instruct")
+    .messages(json!([{"role": "user", "content": "Write a poem"}]))
+    .stream(true)
+    .send_stream()
+    .await?;
+
+while let Some(event) = stream.next().await {
+    if let StreamEvent::Content(delta) = event {
+        print!("{}", delta);
+    }
+}
+```
+
+### Tool Calling
+
+```rust
+let response = client.chat.completions.create()
+    .model("Qwen/Qwen2.5-72B-Instruct")
+    .messages(json!([{"role": "user", "content": "What's the weather in Beijing?"}]))
+    .tools(json!([
+        {
+            "type": "function",
+            "function": {
+                "name": "get_weather",
+                "description": "Get weather information",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "city": {"type": "string"}
+                    },
+                    "required": ["city"]
+                }
+            }
+        }
+    ]))
+    .send()
+    .await?;
+
+if response.has_tool_calls() {
+    for call in &response.tool_calls {
+        let args: serde_json::Value = call.parse_args()?;
+        let result = execute_tool(&call.name, args);
+
+        // Construct tool result message
+        let tool_message = call.result(json!({"temp": 25}));
+    }
+}
+```
+
+## API Style
+
+```rust
+// Chain calls aligned with openai-python
+client.chat.completions.create()
+    .model("model-name")
+    .messages(json!([...]))
+    .temperature(0.7)
+    .max_tokens(1024)
+    .tools(json!([...]))
+    .stream(true)
+    .send()
+    .await?
+```
+
+## Documentation
+
+- [English Docs](https://limoncc.github.io/vllm-client/)
+- [中文文档](https://limoncc.github.io/vllm-client/zh/)
+
+## License
+
+MIT OR Apache-2.0
+
+---
+
+# VLLM Client
+
 一个 Rust 客户端库，用于对接 vLLM 推理引擎的 OpenAI 兼容 API。
 
 ## 设计理念
@@ -36,7 +169,7 @@ use serde_json::json;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = VllmClient::new("http://localhost:8000/v1");
-    
+
     let response = client.chat.completions.create()
         .model("Qwen/Qwen2.5-72B-Instruct")
         .messages(json!([
@@ -46,7 +179,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .max_tokens(512)
         .send()
         .await?;
-    
+
     println!("{}", response.content.unwrap());
     Ok(())
 }
@@ -98,7 +231,7 @@ if response.has_tool_calls() {
     for call in &response.tool_calls {
         let args: serde_json::Value = call.parse_args()?;
         let result = execute_tool(&call.name, args);
-        
+
         // 构造工具结果消息
         let tool_message = call.result(json!({"temp": 25}));
     }
@@ -122,8 +255,8 @@ client.chat.completions.create()
 
 ## 文档
 
-- [API 设计文档](../api设计文档)
-- [TDD 开发计划](./plan.md)
+- [English Docs](https://limoncc.github.io/vllm-client/)
+- [中文文档](https://limoncc.github.io/vllm-client/zh/)
 
 ## License
 
