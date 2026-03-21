@@ -49,7 +49,7 @@ jobs:
       - name: Add language switcher
         run: |
           # Add language switcher to all HTML files
-          find docs/book -name "*.html" -exec sed -i 's|</head>|<style>.lang-switch{position:fixed;top:10px;right:60px;z-index:100;font-size:14px}.lang-switch a{padding:4px 8px;margin:0 2px;border-radius:4px;text-decoration:none;background:#f0f0f0}.lang-switch a:hover{background:#ddd}</style></head>|' {} \;
+          find docs/book -name "*.html" -exec sed -i 's|</head>|<style>.lang-switch{position:fixed;top:10px;left:10px;z-index:9999;font-size:14px;background:#fff;padding:5px 10px;border-radius:4px;box-shadow:0 2px 4px rgba(0,0,0,0.1)}.lang-switch a{padding:4px 8px;margin:0 2px;border-radius:4px;text-decoration:none;background:#f0f0f0;color:#333}.lang-switch a:hover{background:#ddd}</style></head>|' {} \;
           find docs/book -name "*.html" -exec sed -i 's|<body>|<body><div class="lang-switch"><a href="/vllm-client/">English</a><a href="/vllm-client/zh/">中文</a></div>|' {} \;
 
       - name: Setup Pages
