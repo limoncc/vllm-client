@@ -1052,11 +1052,11 @@ cargo publish
 ```
 
 ### 10.3 酷炫效果
-- [ ] Canvas 粒子连线背景动画（暗色科技风）
-- [ ] Logo 文字渐变色 + 微弱发光
-- [ ] 终端窗口 + 打字机效果
-- [ ] 特性卡片悬停上浮 + 发光边框
-- [ ] 按钮悬停渐变 + 微光扫过
+- [x] Canvas 粒子连线背景动画（暗色科技风）
+- [x] Logo 文字渐变色 + 微弱发光
+- [x] 终端窗口 + 打字机效果
+- [x] 特性卡片悬停上浮 + 发光边框
+- [x] 按钮悬停渐变 + 微光扫过
 
 ### 10.4 特性卡片 (6个)
 1. **Async** - Tokio runtime, fully async
@@ -1069,13 +1069,17 @@ cargo publish
 ### 10.5 技术实现
 | 文件 | 作用 |
 |------|------|
+| `docs/theme/index.hbs` | 英文入口主页模板 |
+| `docs/zh/theme/index.hbs` | 中文入口主页模板 |
 | `docs/theme/custom.css` | 暗色主题 + 粒子动画 + 卡片样式 + 悬停效果 |
 | `docs/theme/custom.js` | 粒子背景 + 打字机效果 |
-| `docs/src/index.md` | 入口主页 Markdown 内容 |
+| `docs/zh/book.toml` | 配置中文文档使用自定义主题 |
 
 ### 10.6 实现步骤
-- [ ] 创建 `docs/src/index.md` 主页结构
-- [ ] 更新 `docs/theme/custom.css` 添加暗色主题和动画
-- [ ] 更新 `docs/theme/custom.js` 添加粒子背景和打字机效果
-- [ ] 测试本地预览效果
-- [ ] 提交 Git
+- [x] 创建 `docs/theme/index.hbs` 英文主页模板
+- [x] 创建 `docs/zh/theme/index.hbs` 中文主页模板
+- [x] 更新 `docs/theme/custom.css` 添加暗色主题和动画
+- [x] 更新 `docs/theme/custom.js` 添加粒子背景和打字机效果
+- [x] 更新 `docs/zh/book.toml` 配置中文文档主题
+- [x] 测试本地预览效果
+- [x] 提交 Git
