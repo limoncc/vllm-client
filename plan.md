@@ -1018,3 +1018,64 @@ cargo publish
 - [x] 验证在线文档可访问
 - [x] 更新 Cargo.toml 元数据
 - [x] 发布到 crates.io
+
+---
+
+## 十、首页改版计划
+
+### 10.1 目标
+创建高大尚的入口主页，吸引开发者，提供清晰的项目概述和使用方式。
+
+### 10.2 设计方案
+
+```
+┌─────────────────────────────────────────────────┐
+│                                                   │
+│              VLLM CLIENT                         │
+│     Rust Client for vLLM OpenAI-compatible API   │
+│                                                   │
+│          [📖 English Docs]  [📖 中文文档]         │
+│                                                   │
+│  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐   │
+│  │  🚀    │ │   📡   │ │   🔧   │ │   🖼️   │   │
+│  │ Async  │ │Stream  │ │ Tools  │ │ Multi  │   │
+│  └────────┘ └────────┘ └────────┘ └────────┘   │
+│                                                   │
+│  ┌─────────────────────────────────────────────┐ │
+│  │  $ cargo add vllm-client                    │ │
+│  │  ... 代码打字机效果 ...                      │ │
+│  └─────────────────────────────────────────────┘ │
+│                                                   │
+│          [⭐ GitHub]  [📦 crates.io]              │
+│                                                   │
+└─────────────────────────────────────────────────┘
+```
+
+### 10.3 酷炫效果
+- [ ] Canvas 粒子连线背景动画（暗色科技风）
+- [ ] Logo 文字渐变色 + 微弱发光
+- [ ] 终端窗口 + 打字机效果
+- [ ] 特性卡片悬停上浮 + 发光边框
+- [ ] 按钮悬停渐变 + 微光扫过
+
+### 10.4 特性卡片 (6个)
+1. **Async** - Tokio runtime, fully async
+2. **Streaming** - SSE support with real-time delta
+3. **Tool Calling** - Function calling made easy
+4. **Multimodal** - Image input support
+5. **OpenAI Compatible** - API aligned with openai-python
+6. **Type Safe** - Strong types with Serde
+
+### 10.5 技术实现
+| 文件 | 作用 |
+|------|------|
+| `docs/theme/custom.css` | 暗色主题 + 粒子动画 + 卡片样式 + 悬停效果 |
+| `docs/theme/custom.js` | 粒子背景 + 打字机效果 |
+| `docs/src/index.md` | 入口主页 Markdown 内容 |
+
+### 10.6 实现步骤
+- [ ] 创建 `docs/src/index.md` 主页结构
+- [ ] 更新 `docs/theme/custom.css` 添加暗色主题和动画
+- [ ] 更新 `docs/theme/custom.js` 添加粒子背景和打字机效果
+- [ ] 测试本地预览效果
+- [ ] 提交 Git
