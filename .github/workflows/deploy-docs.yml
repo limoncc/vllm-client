@@ -43,7 +43,7 @@ jobs:
       - name: Build Chinese docs
         run: |
           mkdir -p docs/book/zh
-          mdbook build docs/zh -d ../book/zh
+          mdbook build docs/zh -d docs/book/zh
         working-directory: .
 
       - name: Add language switcher
