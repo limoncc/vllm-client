@@ -1001,20 +1001,20 @@ cargo publish
 ### 9.6 文档发布检查清单
 
 #### 英文文档
-- [ ] 安装 mdBook: `cargo install mdbook`
-- [ ] 配置 book.toml（create-missing=true, linkcheck optional）
-- [ ] 编写所有章节内容
-- [ ] 本地构建测试通过
-- [ ] 代码示例可运行
+- [x] 安装 mdBook: `cargo install mdbook`
+- [x] 配置 book.toml（create-missing=true, linkcheck optional）
+- [x] 编写所有章节内容
+- [x] 本地构建测试通过
+- [x] 代码示例可运行
 
 #### 中文文档
-- [ ] 配置 zh/book.toml
-- [ ] 翻译所有章节内容
-- [ ] 本地构建测试通过
+- [x] 配置 zh/book.toml
+- [x] 翻译所有章节内容
+- [x] 本地构建测试通过
 
 #### 部署与发布
-- [ ] 创建 GitHub Actions 工作流
-- [ ] 启用 GitHub Pages
-- [ ] 验证在线文档可访问
-- [ ] 更新 Cargo.toml 元数据
+- [x] 创建 GitHub Actions 工作流
+- [x] 启用 GitHub Pages
+- [x] 验证在线文档可访问
+- [x] 更新 Cargo.toml 元数据
 - [ ] 发布到 crates.io
