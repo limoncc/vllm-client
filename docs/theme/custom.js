@@ -4,45 +4,61 @@
     'use strict';
 
     // ========================================
-    // Language Switcher (for documentation pages)
+    // Language Switcher for Documentation Pages
     // ========================================
 
     document.addEventListener('DOMContentLoaded', function() {
-        // Only add language switcher if we're not on the landing page
-        if (!document.getElementById('particles-canvas')) {
-            console.log('vLLM Client documentation loaded');
+        // Skip if we're on the landing page (has particles canvas)
+        if (document.getElementById('particles-canvas')) {
+            return;
+        }
 
-            // Create language selector
-            var langSelector = document.createElement('div');
-            langSelector.className = 'language-selector';
+        console.log('vLLM Client documentation loaded');
 
-            // Determine current language based on URL
-            var isZh = window.location.pathname.includes('/zh/');
+        // Create language selector
+        var langSelector = document.createElement('div');
+        langSelector.className = 'language-selector';
 
-            // Create links
-            var enLink = document.createElement('a');
-            enLink.href = '/vllm-client/';
-            enLink.textContent = 'English';
-            if (!isZh) enLink.className = 'active';
+        // Determine current language based on URL
+        var isZh = window.location.pathname.includes('/zh/');
+        var currentPage = window.location.pathname;
 
-            var zhLink = document.createElement('a');
-            zhLink.href = '/vllm-client/zh/';
-            zhLink.textContent = '中文';
-            if (isZh) zhLink.className = 'active';
+        // Create links - always point to the landing page
+        var enLink = document.createElement('a');
+        enLink.href = '/vllm-client/';
+        enLink.textContent = 'EN';
+        if (!isZh) enLink.className = 'active';
 
-            langSelector.appendChild(enLink);
-            langSelector.appendChild(zhLink);
+        var zhLink = document.createElement('a');
+        zhLink.href = '/vllm-client/zh/';
+        zhLink.textContent = '中文';
+        if (isZh) zhLink.className = 'active';
 
-            // Find menu bar and insert language selector after left-buttons
-            var menuBar = document.querySelector('#menu-bar .left-buttons');
-            if (menuBar) {
-                menuBar.parentNode.insertBefore(langSelector, menuBar.nextSibling);
+        langSelector.appendChild(enLink);
+        langSelector.appendChild(zhLink);
+
+        // Find menu bar and insert language selector
+        var menuBar = document.querySelector('#menu-bar .left-buttons');
+        if (menuBar) {
+            // Create a container for our lang selector
+            var container = document.createElement('div');
+            container.className = 'lang-selector-container';
+            container.appendChild(langSelector);
+
+            // Insert after the theme toggle button area
+            var themeToggle = document.querySelector('#theme-toggle');
+            if (themeToggle && themeToggle.parentNode) {
+                themeToggle.parentNode.insertBefore(container, themeToggle.nextSibling);
+            } else if (menuBar.nextSibling) {
+                menuBar.parentNode.insertBefore(container, menuBar.nextSibling);
+            } else {
+                menuBar.parentNode.appendChild(container);
             }
         }
     });
 
     // ========================================
-    // Particle Background Animation
+    // Particle Background Animation (Landing Page Only)
     // ========================================
 
     function initParticles() {

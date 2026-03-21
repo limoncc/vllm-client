@@ -9,11 +9,6 @@ description = "一个兼容 OpenAI 接口的 vLLM API Rust 客户端库"
 build-dir = "book"
 create-missing = true
 
-[theme]
-# Use zh/theme directory for Chinese docs template
-custom-css = ["../theme/custom.css"]
-custom-js = ["../theme/custom.js"]
-
 [output.html]
 git-repository-url = "https://github.com/limoncc/vllm-client"
 edit-url-template = "https://github.com/limoncc/vllm-client/edit/main/docs/zh/{path}"
@@ -21,6 +16,8 @@ site-url = "/vllm-client/zh/"
 default-theme = "rust"
 preferred-dark-theme = "ayu"
 smart-punctuation = true
+additional-css = ["../theme/custom.css"]
+additional-js = ["../theme/custom.js"]
 
 [output.html.search]
 enable = true
