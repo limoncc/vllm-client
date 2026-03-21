@@ -43,7 +43,7 @@ jobs:
       - name: Build Chinese docs
         run: |
           mkdir -p docs/book/zh
-          mdbook build docs/zh -d docs/book/zh
+          mdbook build docs/zh -d ../book/zh
         working-directory: .
 
       # Language switcher is now handled by custom theme files (header.hbs)
