@@ -1074,17 +1074,21 @@ cargo publish
 ### 10.5 技术实现
 | 文件 | 作用 |
 |------|------|
-| `docs/theme/index.hbs` | 英文入口主页模板 |
-| `docs/zh/theme/index.hbs` | 中文入口主页模板 |
-| `docs/theme/custom.css` | 暗色主题 + 粒子动画 + 卡片样式 + 悬停效果 |
-| `docs/theme/custom.js` | 粒子背景 + 打字机效果 |
-| `docs/zh/book.toml` | 配置中文文档使用自定义主题 |
+| `docs/landing/index.html` | 英文首页（静态 HTML） |
+| `docs/landing/zh/index.html` | 中文首页（静态 HTML） |
+| `.github/workflows/deploy-docs.yml` | GitHub Actions 构建脚本 |
 
-### 10.6 实现步骤
-- [x] 创建 `docs/theme/index.hbs` 英文主页模板
-- [x] 创建 `docs/zh/theme/index.hbs` 中文主页模板
-- [x] 更新 `docs/theme/custom.css` 添加暗色主题和动画
-- [x] 更新 `docs/theme/custom.js` 添加粒子背景和打字机效果
-- [x] 更新 `docs/zh/book.toml` 配置中文文档主题
+### 10.6 URL 结构
+```
+/                         → 英文首页
+/zh/                      → 中文首页
+/getting-started.html     → 英文文档
+/zh/getting-started.html  → 中文文档
+```
+
+### 10.7 实现步骤
+- [x] 创建 `docs/landing/index.html` 英文首页
+- [x] 创建 `docs/landing/zh/index.html` 中文首页
+- [x] 更新 GitHub Actions 支持首页+文档部署
 - [x] 测试本地预览效果
 - [x] 提交 Git
