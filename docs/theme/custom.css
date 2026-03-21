@@ -1,5 +1,8 @@
 /* Custom theme for vLLM Client documentation */
 
+/* Landing page specific - these styles are self-contained in index.hbs */
+/* This file now primarily contains documentation-specific overrides */
+
 /* Improve code block styling */
 pre code {
     border-radius: 4px;
@@ -101,4 +104,13 @@ table th {
     .warning, .note {
         margin: 0.5em;
     }
+}
+
+/* ========================================
+   Landing Page Animations
+   ======================================== */
+
+/* Particle canvas glow effect */
+#particles-canvas {
+    opacity: 0.8;
 }

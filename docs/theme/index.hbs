@@ -1,0 +1,442 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vLLM Client - Rust Client for vLLM API</title>
+    <meta name="description" content="A Rust client library for vLLM API with OpenAI-compatible interface">
+
+    <!-- Favicon -->
+    <link rel="icon" href="{{path_to_root}}favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="{{path_to_root}}favicon.png">
+
+    <!-- Fonts -->
+    <link rel="stylesheet" href="{{path_to_root}}FontAwesome/css/font-awesome.css">
+    <link rel="stylesheet" href="{{path_to_root}}fonts/fonts.css">
+
+    <!-- Custom Theme -->
+    <link rel="stylesheet" href="{{path_to_root}}theme/custom.css">
+
+    <style>
+        /* Reset and Base */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+
+        /* Canvas Background */
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Main Container */
+        .landing-container {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 60px 20px;
+        }
+
+        /* Logo Section */
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-title {
+            font-size: 4rem;
+            font-weight: 800;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient-shift 8s ease infinite;
+            text-shadow: 0 0 60px rgba(255, 107, 107, 0.3);
+        }
+
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .logo-subtitle {
+            font-size: 1.3rem;
+            color: #888;
+            margin-top: 10px;
+            font-weight: 400;
+        }
+
+        /* Language Switcher */
+        .lang-switcher {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 50px;
+        }
+
+        .lang-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #fff;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        .lang-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.3);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .lang-btn i {
+            font-size: 1.1rem;
+        }
+
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            max-width: 900px;
+            width: 100%;
+            margin-bottom: 50px;
+        }
+
+        .feature-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 30px 20px;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: default;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(255,255,255,0.2);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 30px rgba(72, 219, 251, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .feature-desc {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        /* Terminal Window */
+        .terminal-wrapper {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 50px;
+        }
+
+        .terminal-window {
+            background: rgba(10, 10, 20, 0.95);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow: hidden;
+            box-shadow: 0 20px 80px rgba(0,0,0,0.5);
+        }
+
+        .terminal-header {
+            background: rgba(255,255,255,0.05);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot.red { background: #ff5f56; }
+        .terminal-dot.yellow { background: #ffbd2e; }
+        .terminal-dot.green { background: #27ca40; }
+
+        .terminal-title {
+            flex: 1;
+            text-align: center;
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .terminal-body {
+            padding: 20px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #7ee787;
+            min-height: 280px;
+        }
+
+        .terminal-body .comment { color: #6a737d; }
+        .terminal-body .keyword { color: #ff7b72; }
+        .terminal-body .string { color: #a5d6ff; }
+        .terminal-body .function { color: #d2a8ff; }
+        .terminal-body .macro { color: #ffa657; }
+        .terminal-body .prompt { color: #79c0ff; }
+
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background: #7ee787;
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* Social Links */
+        .social-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .social-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .social-btn.github {
+            background: linear-gradient(135deg, #333, #1a1a1a);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .social-btn.github:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        }
+
+        .social-btn.crates {
+            background: linear-gradient(135deg, #e68a00, #ffb347);
+            color: #1a1a1a;
+        }
+
+        .social-btn.crates:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px rgba(230, 138, 0, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .logo-title { font-size: 2.5rem; }
+            .features-grid { grid-template-columns: repeat(2, 1fr); gap: 15px; }
+            .terminal-body { font-size: 0.8rem; padding: 15px; }
+            .social-links { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Particle Canvas Background -->
+    <canvas id="particles-canvas"></canvas>
+
+    <div class="landing-container">
+        <!-- Logo Section -->
+        <div class="logo-section">
+            <h1 class="logo-title">VLLM CLIENT</h1>
+            <p class="logo-subtitle">Rust Client for vLLM OpenAI-compatible API</p>
+        </div>
+
+        <!-- Language Switcher -->
+        <div class="lang-switcher">
+            <a href="{{path_to_root}}index.html" class="lang-btn">
+                <i class="fa fa-book"></i> English Docs
+            </a>
+            <a href="{{path_to_root}}zh/index.html" class="lang-btn">
+                <i class="fa fa-book"></i> 中文文档
+            </a>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div>
+                <div class="feature-title">Async</div>
+                <div class="feature-desc">Tokio runtime, fully async</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📡</div>
+                <div class="feature-title">Streaming</div>
+                <div class="feature-desc">SSE with real-time delta</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔧</div>
+                <div class="feature-title">Tool Calling</div>
+                <div class="feature-desc">Function calling made easy</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🖼️</div>
+                <div class="feature-title">Multimodal</div>
+                <div class="feature-desc">Image input support</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <div class="feature-title">OpenAI Compatible</div>
+                <div class="feature-desc">API aligned with openai-python</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <div class="feature-title">Type Safe</div>
+                <div class="feature-desc">Strong types with Serde</div>
+            </div>
+        </div>
+
+        <!-- Terminal Demo -->
+        <div class="terminal-wrapper">
+            <div class="terminal-window">
+                <div class="terminal-header">
+                    <div class="terminal-dot red"></div>
+                    <div class="terminal-dot yellow"></div>
+                    <div class="terminal-dot green"></div>
+                    <div class="terminal-title">streaming_example.rs</div>
+                </div>
+                <div class="terminal-body" id="terminal-content">
+                    <!-- Code will be typed here by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Social Links -->
+        <div class="social-links">
+            <a href="https://github.com/limoncc/vllm-client" class="social-btn github" target="_blank">
+                <i class="fa fa-github"></i> GitHub
+            </a>
+            <a href="https://crates.io/crates/vllm-client" class="social-btn crates" target="_blank">
+                <i class="fa fa-cube"></i> crates.io
+            </a>
+        </div>
+    </div>
+
+    <!-- Custom JavaScript -->
+    <script src="{{path_to_root}}theme/custom.js"></script>
+    <script>
+        // Typewriter effect for terminal
+        const codeLines = [
+            '<span class="prompt">$</span> <span class="macro">cargo</span> add vllm-client',
+            '',
+            '<span class="comment">// Use the client</span>',
+            '<span class="keyword">use</span> vllm_client::VllmClient;',
+            '<span class="keyword">use</span> serde_json::json;',
+            '',
+            '<span class="attr">#[tokio::main]</span>',
+            '<span class="keyword">async fn</span> main() <span class="keyword">-&gt;</span> Result&lt;()&gt; {',
+            '    <span class="keyword">let</span> client = VllmClient::new(<span class="string">"http://localhost:8000"</span>);',
+            '',
+            '    <span class="keyword">let</span> <span class="keyword">mut</span> stream = client.chat()',
+            '        .completions()',
+            '        .create()',
+            '        .messages(json!([',
+            '            {<span class="string">"role"</span>: <span class="string">"user"</span>, <span class="string">"content"</span>: <span class="string">"Hello!"</span>}',
+            '        ]))',
+            '        .stream(<span class="macro">true</span>)',
+            '        .send_stream()',
+            '        .await?;',
+            '',
+            '    <span class="keyword">while let</span> Some(event) = stream.next().<span class="function">await</span> {',
+            '        <span class="keyword">if let</span> StreamEvent::Content(delta) = event {',
+            '            print!(<span class="string">"{}"</span>, delta);',
+            '        }',
+            '    }',
+            '}',
+            ''
+        ];
+
+        let lineIndex = 0;
+        let charIndex = 0;
+        let isTag = false;
+        let currentHtml = '';
+
+        function typeWriter() {
+            if (lineIndex < codeLines.length) {
+                const line = codeLines[lineIndex];
+
+                if (charIndex < line.length) {
+                    let char = line[charIndex];
+
+                    // Handle HTML tags
+                    if (char === '<') {
+                        isTag = true;
+                    }
+
+                    if (isTag) {
+                        currentHtml += char;
+                        if (char === '>') {
+                            isTag = false;
+                        }
+                    } else {
+                        currentHtml += char;
+                    }
+
+                    charIndex++;
+                    document.getElementById('terminal-content').innerHTML = currentHtml + '<span class="cursor"></span>';
+                    setTimeout(typeWriter, isTag ? 0 : 15);
+                } else {
+                    currentHtml += '\n';
+                    charIndex = 0;
+                    lineIndex++;
+                    document.getElementById('terminal-content').innerHTML = currentHtml + '<span class="cursor"></span>';
+                    setTimeout(typeWriter, 100);
+                }
+            } else {
+                document.getElementById('terminal-content').innerHTML = currentHtml;
+            }
+        }
+
+        // Start typewriter after a short delay
+        setTimeout(typeWriter, 1000);
+    </script>
+</body>
+</html>
