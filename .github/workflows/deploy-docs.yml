@@ -39,7 +39,7 @@ jobs:
         working-directory: .
 
       - name: Build Chinese docs
-        run: mdbook build docs/zh
+        run: mdbook build docs/zh -d ../book/zh
         working-directory: .
 
       - name: Copy English landing page to root
@@ -48,7 +48,7 @@ jobs:
 
       - name: Copy Chinese landing page
         run: |
-          cp docs/landing/zh/index.html docs/zh/book/index.html
+          cp docs/landing/zh/index.html docs/book/zh/index.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
