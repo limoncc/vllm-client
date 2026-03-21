@@ -1017,4 +1017,4 @@ cargo publish
 - [x] 启用 GitHub Pages
 - [x] 验证在线文档可访问
 - [x] 更新 Cargo.toml 元数据
-- [ ] 发布到 crates.io
+- [x] 发布到 crates.io
