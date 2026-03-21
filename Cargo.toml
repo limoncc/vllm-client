@@ -8,7 +8,7 @@ documentation = "https://limoncc.github.io/vllm-client"
 repository = "https://github.com/limoncc/vllm-client"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
-keywords = ["ai", "client", "llm", "openai", "vllm", "chat", "streaming"]
+keywords = ["vllm", "llm", "openai", "ai", "client"]
 categories = ["api-bindings", "web-programming::http-client", "asynchronous"]
 exclude = ["/docs", "/tests", "/examples", ".github"]
 
