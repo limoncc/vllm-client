@@ -38,23 +38,52 @@ table th {
     border-left: 4px solid #0d6efd;
 }
 
-/* Language selector styling */
+/* Language selector styling - inline in menu bar */
 .language-selector {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    z-index: 100;
+    display: inline-flex;
+    align-items: center;
+    margin-left: 15px;
+    padding-left: 15px;
+    border-left: 1px solid var(--sidebar-divider, #ccc);
 }
 
 .language-selector a {
-    padding: 0.3em 0.6em;
-    margin: 0 0.2em;
+    padding: 4px 8px;
+    margin: 0 2px;
     border-radius: 4px;
     text-decoration: none;
+    font-size: 14px;
+    background: #f0f0f0;
+    color: #333;
+    transition: background-color 0.2s;
+}
+
+.language-selector a:hover {
+    background: #ddd;
 }
 
 .language-selector a.active {
     background-color: var(--sidebar-active);
+    font-weight: bold;
+}
+
+/* Fallback for fixed position (alternative style) */
+.language-selector.fixed {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 9999;
+    background: #fff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-left: none;
+}
+
+/* Ensure language selector is visible in menu bar */
+#menu-bar {
+    display: flex;
+    align-items: center;
 }
 
 /* Improved navigation */
