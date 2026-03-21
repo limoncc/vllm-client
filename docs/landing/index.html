@@ -7,30 +7,26 @@
     <meta name="description" content="A Rust client library for vLLM API with OpenAI-compatible interface">
 
     <!-- Favicon -->
-    <link rel="icon" href="{{path_to_root}}favicon.svg" type="image/svg+xml">
-    <link rel="icon" href="{{path_to_root}}favicon.png">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="favicon.png">
 
     <!-- Fonts -->
-    <link rel="stylesheet" href="{{path_to_root}}FontAwesome/css/font-awesome.css">
-    <link rel="stylesheet" href="{{path_to_root}}fonts/fonts.css">
-
-    <!-- Custom Theme -->
-    <link rel="stylesheet" href="{{path_to_root}}theme/custom.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 
     <style>
-        /* Reset and Base */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         html, body {
             width: 100%;
-            height: 100%;
+            min-height: 100vh;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: #0a0a0f;
             color: #e0e0e0;
             overflow-x: hidden;
         }
 
-        /* Canvas Background */
+        /* Particle Canvas */
         #particles-canvas {
             position: fixed;
             top: 0;
@@ -53,7 +49,7 @@
         }
 
         /* Language Switcher - Top Right */
-        .lang-switcher-top {
+        .lang-switcher {
             position: fixed;
             top: 20px;
             right: 20px;
@@ -62,7 +58,7 @@
             z-index: 100;
         }
 
-        .lang-btn-small {
+        .lang-btn {
             padding: 8px 16px;
             border-radius: 6px;
             text-decoration: none;
@@ -74,12 +70,12 @@
             background: rgba(255,255,255,0.05);
         }
 
-        .lang-btn-small:hover {
+        .lang-btn:hover {
             background: rgba(255,255,255,0.1);
             color: #fff;
         }
 
-        .lang-btn-small.active {
+        .lang-btn.active {
             background: rgba(255,255,255,0.15);
             color: #fff;
             border-color: rgba(255,255,255,0.3);
@@ -145,11 +141,7 @@
             box-shadow: 0 15px 50px rgba(0,0,0,0.4);
         }
 
-        .doc-btn i {
-            font-size: 1.2rem;
-        }
-
-        /* Features Grid - 3 columns */
+        /* Features Grid */
         .features-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -176,25 +168,11 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 30px rgba(72, 219, 251, 0.1);
         }
 
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 18px;
-        }
+        .feature-icon { font-size: 2.5rem; margin-bottom: 18px; }
+        .feature-title { font-size: 1.15rem; font-weight: 600; color: #fff; margin-bottom: 10px; }
+        .feature-desc { font-size: 0.9rem; color: #666; line-height: 1.5; }
 
-        .feature-title {
-            font-size: 1.15rem;
-            font-weight: 600;
-            color: #fff;
-            margin-bottom: 10px;
-        }
-
-        .feature-desc {
-            font-size: 0.9rem;
-            color: #666;
-            line-height: 1.5;
-        }
-
-        /* Terminal Window */
+        /* Terminal */
         .terminal-wrapper {
             width: 100%;
             max-width: 850px;
@@ -217,12 +195,7 @@
             gap: 10px;
         }
 
-        .terminal-dot {
-            width: 13px;
-            height: 13px;
-            border-radius: 50%;
-        }
-
+        .terminal-dot { width: 13px; height: 13px; border-radius: 50%; }
         .terminal-dot.red { background: #ff5f56; }
         .terminal-dot.yellow { background: #ffbd2e; }
         .terminal-dot.green { background: #27ca40; }
@@ -236,20 +209,20 @@
 
         .terminal-body {
             padding: 25px;
-            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
             font-size: 0.9rem;
             line-height: 1.7;
             color: #7ee787;
             min-height: 300px;
         }
 
-        .terminal-body .comment { color: #6a737d; }
-        .terminal-body .keyword { color: #ff7b72; }
-        .terminal-body .string { color: #a5d6ff; }
-        .terminal-body .function { color: #d2a8ff; }
-        .terminal-body .macro { color: #ffa657; }
-        .terminal-body .prompt { color: #79c0ff; }
-        .terminal-body .attr { color: #7ee787; }
+        .comment { color: #6a737d; }
+        .keyword { color: #ff7b72; }
+        .string { color: #a5d6ff; }
+        .function { color: #d2a8ff; }
+        .macro { color: #ffa657; }
+        .prompt { color: #79c0ff; }
+        .attr { color: #7ee787; }
 
         .cursor {
             display: inline-block;
@@ -261,15 +234,10 @@
             margin-left: 2px;
         }
 
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
+        @keyframes blink { 50% { opacity: 0; } }
 
         /* Social Links */
-        .social-links {
-            display: flex;
-            gap: 20px;
-        }
+        .social-links { display: flex; gap: 20px; }
 
         .social-btn {
             display: inline-flex;
@@ -315,42 +283,36 @@
             .doc-buttons { flex-direction: column; }
             .terminal-body { font-size: 0.8rem; padding: 15px; }
             .social-links { flex-direction: column; }
-            .lang-switcher-top { top: 10px; right: 10px; }
         }
     </style>
 </head>
 <body>
-    <!-- Particle Canvas Background -->
     <canvas id="particles-canvas"></canvas>
 
     <div class="landing-container">
-        <!-- Language Switcher - Top Right -->
-        <div class="lang-switcher-top">
-            <a href="{{path_to_root}}index.html" class="lang-btn-small active">
-                EN
-            </a>
-            <a href="{{path_to_root}}zh/index.html" class="lang-btn-small">
-                中文
-            </a>
+        <!-- Language Switcher -->
+        <div class="lang-switcher">
+            <a href="index.html" class="lang-btn active">EN</a>
+            <a href="zh/index.html" class="lang-btn">中文</a>
         </div>
 
-        <!-- Logo Section -->
+        <!-- Logo -->
         <div class="logo-section">
             <h1 class="logo-title">vLLM-Client</h1>
             <p class="logo-subtitle">Rust Client for vLLM OpenAI-compatible API</p>
         </div>
 
-        <!-- Centered Doc Buttons -->
+        <!-- Doc Buttons -->
         <div class="doc-buttons">
-            <a href="{{path_to_root}}index.html" class="doc-btn">
+            <a href="getting-started.html" class="doc-btn">
                 <i class="fa fa-book"></i> English Docs
             </a>
-            <a href="{{path_to_root}}zh/index.html" class="doc-btn">
+            <a href="zh/getting-started.html" class="doc-btn">
                 <i class="fa fa-book"></i> 中文文档
             </a>
         </div>
 
-        <!-- Features Grid -->
+        <!-- Features -->
         <div class="features-grid">
             <div class="feature-card">
                 <div class="feature-icon">🚀</div>
@@ -384,7 +346,7 @@
             </div>
         </div>
 
-        <!-- Terminal Demo -->
+        <!-- Terminal -->
         <div class="terminal-wrapper">
             <div class="terminal-window">
                 <div class="terminal-header">
@@ -393,13 +355,11 @@
                     <div class="terminal-dot green"></div>
                     <div class="terminal-title">streaming_example.rs</div>
                 </div>
-                <div class="terminal-body" id="terminal-content">
-                    <!-- Code will be typed here by JavaScript -->
-                </div>
+                <div class="terminal-body" id="terminal-content"></div>
             </div>
         </div>
 
-        <!-- Social Links -->
+        <!-- Social -->
         <div class="social-links">
             <a href="https://github.com/limoncc/vllm-client" class="social-btn github" target="_blank">
                 <i class="fa fa-github"></i> GitHub
@@ -410,11 +370,104 @@
         </div>
     </div>
 
-    <!-- Custom JavaScript -->
-    <script src="{{path_to_root}}theme/custom.js"></script>
     <script>
-        // Typewriter effect for terminal
-        const codeLines = [
+        // Particles
+        (function() {
+            var canvas = document.getElementById('particles-canvas');
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+            var particles = [];
+            var particleCount = 80;
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            var mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+            document.addEventListener('mousemove', function(e) {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+            });
+
+            function Particle() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = Math.random() * 2 + 1;
+                this.color = 'rgba(72, 219, 251, ' + (Math.random() * 0.5 + 0.2) + ')';
+            }
+
+            Particle.prototype.update = function() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.y < 0) this.y = canvas.height;
+                if (this.y > canvas.height) this.y = 0;
+            };
+
+            Particle.prototype.draw = function() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            };
+
+            for (var i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+
+            function drawConnections() {
+                for (var i = 0; i < particles.length; i++) {
+                    for (var j = i + 1; j < particles.length; j++) {
+                        var dx = particles[i].x - particles[j].x;
+                        var dy = particles[i].y - particles[j].y;
+                        var dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 150) {
+                            var opacity = 1 - (dist / 150);
+                            ctx.beginPath();
+                            ctx.strokeStyle = 'rgba(72, 219, 251, ' + (opacity * 0.3) + ')';
+                            ctx.lineWidth = 1;
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                for (var i = 0; i < particles.length; i++) {
+                    var dx = particles[i].x - mouse.x;
+                    var dy = particles[i].y - mouse.y;
+                    var dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 200) {
+                        var opacity = 1 - (dist / 200);
+                        ctx.beginPath();
+                        ctx.strokeStyle = 'rgba(255, 107, 107, ' + (opacity * 0.5) + ')';
+                        ctx.lineWidth = 1.5;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (var i = 0; i < particles.length; i++) {
+                    particles[i].update();
+                    particles[i].draw();
+                }
+                drawConnections();
+                requestAnimationFrame(animate);
+            }
+            animate();
+        })();
+
+        // Typewriter
+        var codeLines = [
             '<span class="prompt">$</span> <span class="macro">cargo</span> add vllm-client',
             '',
             '<span class="comment">// Use the client</span>',
@@ -444,32 +497,16 @@
             ''
         ];
 
-        let lineIndex = 0;
-        let charIndex = 0;
-        let isTag = false;
-        let currentHtml = '';
+        var lineIndex = 0, charIndex = 0, isTag = false, currentHtml = '';
 
         function typeWriter() {
             if (lineIndex < codeLines.length) {
-                const line = codeLines[lineIndex];
-
+                var line = codeLines[lineIndex];
                 if (charIndex < line.length) {
-                    let char = line[charIndex];
-
-                    // Handle HTML tags
-                    if (char === '<') {
-                        isTag = true;
-                    }
-
-                    if (isTag) {
-                        currentHtml += char;
-                        if (char === '>') {
-                            isTag = false;
-                        }
-                    } else {
-                        currentHtml += char;
-                    }
-
+                    var ch = line[charIndex];
+                    if (ch === '<') isTag = true;
+                    currentHtml += ch;
+                    if (ch === '>') isTag = false;
                     charIndex++;
                     document.getElementById('terminal-content').innerHTML = currentHtml + '<span class="cursor"></span>';
                     setTimeout(typeWriter, isTag ? 0 : 15);
@@ -484,8 +521,6 @@
                 document.getElementById('terminal-content').innerHTML = currentHtml;
             }
         }
-
-        // Start typewriter after a short delay
         setTimeout(typeWriter, 1000);
     </script>
 </body>
