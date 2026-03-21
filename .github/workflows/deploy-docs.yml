@@ -35,24 +35,20 @@ jobs:
         run: cargo install mdbook --version 0.4.34
 
       - name: Build English docs
-        run: mdbook build docs -d docs/book
+        run: mdbook build docs
         working-directory: .
 
       - name: Build Chinese docs
-        run: mdbook build docs/zh -d docs/book/zh
+        run: mdbook build docs/zh
         working-directory: .
 
       - name: Copy English landing page to root
         run: |
           cp docs/landing/index.html docs/book/index.html
-          cp -r docs/landing/zh/* docs/book/zh/
 
-      - name: Copy favicon and fonts to landing
+      - name: Copy Chinese landing page
         run: |
-          cp docs/book/favicon.svg docs/landing/
-          cp docs/book/favicon.png docs/landing/
-          cp -r docs/book/fonts docs/landing/fonts 2>/dev/null || true
-          cp -r docs/book/FontAwesome docs/landing/FontAwesome 2>/dev/null || true
+          cp docs/landing/zh/index.html docs/zh/book/index.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
