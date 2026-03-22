@@ -363,6 +363,79 @@ match result {
 }
 ```
 
+## Completions Streaming
+
+The vLLM Client also supports streaming for the legacy `/v1/completions` API using `CompletionStreamEvent`.
+
+### CompletionStreamEvent Types
+
+| Variant | Description |
+|---------|-------------|
+| `Text(String)` | Text token delta |
+| `FinishReason(String)` | Reason why the stream finished (e.g., "stop", "length") |
+| `Usage(Usage)` | Token usage statistics |
+| `Done` | Stream completed successfully |
+| `Error(VllmError)` | An error occurred |
+
+### Completions Streaming Example
+
+```rust
+use vllm_client::{VllmClient, json, CompletionStreamEvent};
+use futures::StreamExt;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = VllmClient::new("http://localhost:8000/v1");
+
+    let mut stream = client
+        .completions
+        .create()
+        .model("Qwen/Qwen2.5-7B-Instruct")
+        .prompt("Write a poem about spring")
+        .max_tokens(1024)
+        .temperature(0.7)
+        .stream(true)
+        .send_stream()
+        .await?;
+
+    while let Some(event) = stream.next().await {
+        match event {
+            CompletionStreamEvent::Text(delta) => {
+                print!("{}", delta);
+                std::io::stdout().flush().ok();
+            }
+            CompletionStreamEvent::FinishReason(reason) => {
+                println!("\n[Finish reason: {}]", reason);
+            }
+            CompletionStreamEvent::Usage(usage) => {
+                println!("\nTokens: prompt={}, completion={}, total={}",
+                    usage.prompt_tokens,
+                    usage.completion_tokens,
+                    usage.total_tokens
+                );
+            }
+            CompletionStreamEvent::Done => {
+                println!("\n[Stream completed]");
+            }
+            CompletionStreamEvent::Error(e) => {
+                eprintln!("Error: {}", e);
+                return Err(e.into());
+            }
+        }
+    }
+
+    Ok(())
+}
+```
+
+### CompletionStream Methods
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `next()` | `Option<CompletionStreamEvent>` | Get next event (async) |
+| `collect_text()` | `String` | Collect all text into a string |
+| `into_stream()` | `impl Stream` | Convert to generic stream |
+
 ## Next Steps
 
 - [Tool Calling](./tool-calling.md) - Using function calling

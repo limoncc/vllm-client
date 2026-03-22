@@ -27,7 +27,7 @@ mod chat;
 mod client;
 mod completions;
 mod error;
-mod types;
+pub mod types;
 
 pub use chat::Chat;
 pub use client::VllmClient;

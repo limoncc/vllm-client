@@ -10,6 +10,7 @@ This section contains practical code examples demonstrating vLLM Client usage pa
 |---------|-------------|
 | [Basic Chat](./examples/basic-chat.md) | Simple chat completion requests |
 | [Streaming Chat](./examples/streaming-chat.md) | Real-time streaming responses |
+| [Streaming Completions](./examples/streaming-completions.md) | Legacy completions streaming |
 | [Tool Calling](./examples/tool-calling.md) | Function calling integration |
 | [Multi-modal](./examples/multimodal.md) | Image and multi-modal inputs |
 

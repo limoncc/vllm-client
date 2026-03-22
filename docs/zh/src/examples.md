@@ -6,6 +6,7 @@
 
 - [基础聊天](#基础聊天)
 - [流式聊天](#流式聊天)
+- [流式 Completions](#流式-completions)
 - [工具调用](#工具调用)
 - [多模态](#多模态)
 - [思考模式](#思考模式)
@@ -175,6 +176,63 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+
+---
+
+## 流式 Completions
+
+### 旧版 Completions API 流式调用
+
+```rust
+use vllm_client::{VllmClient, json, CompletionStreamEvent};
+use futures::StreamExt;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = VllmClient::new("http://localhost:8000/v1");
+
+    let mut stream = client
+        .completions
+        .create()
+        .model("Qwen/Qwen2.5-7B-Instruct")
+        .prompt("什么是机器学习？")
+        .max_tokens(500)
+        .temperature(0.7)
+        .stream(true)
+        .send_stream()
+        .await?;
+
+    while let Some(event) = stream.next().await {
+        match event {
+            CompletionStreamEvent::Text(delta) => {
+                print!("{}", delta);
+                std::io::stdout().flush().ok();
+            }
+            CompletionStreamEvent::FinishReason(reason) => {
+                println!("\n[结束原因: {}]", reason);
+            }
+            CompletionStreamEvent::Usage(usage) => {
+                println!("\nTokens: 提示词={}, 补全={}, 总计={}",
+                    usage.prompt_tokens,
+                    usage.completion_tokens,
+                    usage.total_tokens
+                );
+            }
+            CompletionStreamEvent::Done => {
+                println!("\n[流式传输完成]");
+            }
+            CompletionStreamEvent::Error(e) => {
+                eprintln!("错误: {}", e);
+                return Err(e.into());
+            }
+        }
+    }
+
+    Ok(())
+}
+```
+
+> **注意**: 对于新项目，推荐使用 Chat Completions API (`client.chat.completions()`)，它提供更灵活的功能和更好的消息格式。
 
 ---
 

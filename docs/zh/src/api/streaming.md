@@ -363,6 +363,79 @@ match result {
 }
 ```
 
+## Completions 流式 API
+
+vLLM Client 同时支持旧版 `/v1/completions` API 的流式调用，使用 `CompletionStreamEvent`。
+
+### CompletionStreamEvent 类型
+
+| 变体 | 说明 |
+|---------|-------------|
+| `Text(String)` | 文本 token 增量 |
+| `FinishReason(String)` | 流结束原因（如 "stop", "length"） |
+| `Usage(Usage)` | Token 使用统计 |
+| `Done` | 流式传输完成 |
+| `Error(VllmError)` | 发生错误 |
+
+### Completions 流式示例
+
+```rust
+use vllm_client::{VllmClient, json, CompletionStreamEvent};
+use futures::StreamExt;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = VllmClient::new("http://localhost:8000/v1");
+
+    let mut stream = client
+        .completions
+        .create()
+        .model("Qwen/Qwen2.5-7B-Instruct")
+        .prompt("写一首关于春天的诗")
+        .max_tokens(1024)
+        .temperature(0.7)
+        .stream(true)
+        .send_stream()
+        .await?;
+
+    while let Some(event) = stream.next().await {
+        match event {
+            CompletionStreamEvent::Text(delta) => {
+                print!("{}", delta);
+                std::io::stdout().flush().ok();
+            }
+            CompletionStreamEvent::FinishReason(reason) => {
+                println!("\n[结束原因: {}]", reason);
+            }
+            CompletionStreamEvent::Usage(usage) => {
+                println!("\nTokens: 提示词={}, 补全={}, 总计={}",
+                    usage.prompt_tokens,
+                    usage.completion_tokens,
+                    usage.total_tokens
+                );
+            }
+            CompletionStreamEvent::Done => {
+                println!("\n[流式传输完成]");
+            }
+            CompletionStreamEvent::Error(e) => {
+                eprintln!("错误: {}", e);
+                return Err(e.into());
+            }
+        }
+    }
+
+    Ok(())
+}
+```
+
+### CompletionStream 方法
+
+| 方法 | 返回类型 | 说明 |
+|--------|-------------|------|
+| `next()` | `Option<CompletionStreamEvent>` | 获取下一个事件（异步） |
+| `collect_text()` | `String` | 收集所有文本为字符串 |
+| `into_stream()` | `impl Stream` | 转换为通用流 |
+
 ## 相关链接
 
 - [工具调用](./tool-calling.md) - 使用函数调用

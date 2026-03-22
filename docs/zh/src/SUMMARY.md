@@ -14,6 +14,7 @@
 - [示例](./examples.md)
   - [基础聊天](./examples/basic-chat.md)
   - [流式聊天](./examples/streaming-chat.md)
+  - [流式 Completions](./examples/streaming-completions.md)
   - [工具调用](./examples/tool-calling.md)
   - [多模态](./examples/multimodal.md)
 - [高级主题](./advanced.md)

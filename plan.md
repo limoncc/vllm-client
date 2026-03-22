@@ -1092,3 +1092,58 @@ cargo publish
 - [x] 更新 GitHub Actions 支持首页+文档部署
 - [x] 测试本地预览效果
 - [x] 提交 Git
+
+---
+
+## 十一、Completions 流式请求实现
+
+### 11.1 目标
+为 `/v1/completions` API 添加流式请求支持，与 Chat Completions 的流式实现保持一致。
+
+### 11.2 实现计划
+
+#### 11.2.1 测试用例设计
+```
+tests/test_completions_stream.rs
+
+Test: test_completions_stream_request
+  输入: client.completions.create().model().prompt().stream(true)
+  预期: send_stream() 方法可用，返回 CompletionStream
+
+Test: test_completions_stream_response_format
+  输入: Mock SSE 响应
+    data: {"id":"cmpl-1","object":"text_completion","choices":[{"text":"Hello","index":0,"finish_reason":null}]}
+    data: {"id":"cmpl-1","object":"text_completion","choices":[{"text":" World","index":0,"finish_reason":"stop"}]}
+    data: [DONE]
+  预期: 解析为 Content 事件，最终触发 Done 事件
+
+Test: test_completions_stream_multiple_choices
+  输入: 多个 choices 的流式响应
+  预期: 正确解析每个 choice 的 text
+
+Test: test_completions_stream_usage
+  输入: 末尾包含 usage 的流式 chunk
+  预期: 解析为 Usage 事件
+```
+
+#### 11.2.2 实现步骤
+1. 在 `types.rs` 添加 `CompletionStream` 类型
+2. 在 `completions.rs` 添加 `send_stream()` 方法
+3. 实现 SSE 解析逻辑（类似 MessageStream 但针对 completion 格式）
+4. 添加测试用例验证
+
+### 11.3 开发日志
+
+#### Day 1: Phase 11 - Completions 流式请求
+- 工作内容：
+  - 创建 `tests/test_completions_stream.rs`，包含 11 个测试用例
+  - 在 `src/types.rs` 添加 `CompletionStream` 和 `CompletionStreamEvent` 类型
+  - 在 `src/completions.rs` 添加 `send_stream()` 方法和 `Clone` 实现
+  - 实现 SSE 流式解析逻辑（类似 MessageStream 但针对 completion 格式）
+  - 创建 `examples/streaming_completions.rs` 真实 API 测试示例
+- 测试结果：
+  - 新增 11 个测试全部通过
+  - 总测试数量：152 个测试通过
+- 遇到问题：
+  - 修复类型转换问题（AsyncStream 需要使用 .boxed() 转换为 BoxStream）
+  - 修复 CompletionRequest 需要实现 Clone 以便 send_stream 中克隆

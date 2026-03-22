@@ -435,6 +435,147 @@ impl MessageStream {
 }
 
 // ============================================================================
+// Completion Stream (Legacy Completions)
+// ============================================================================
+
+/// Completions 流式响应对象
+pub struct CompletionStream {
+    inner: futures::stream::BoxStream<'static, CompletionStreamEvent>,
+}
+
+impl CompletionStream {
+    /// 从 Response 创建流
+    pub fn new(response: reqwest::Response) -> Self {
+        use async_stream::stream;
+        use futures::StreamExt;
+
+        let stream = stream! {
+            let mut byte_stream = response.bytes_stream();
+            let mut buffer = String::new();
+
+            while let Some(chunk) = byte_stream.next().await {
+                match chunk {
+                    Ok(bytes) => {
+                        let text = String::from_utf8_lossy(&bytes);
+                        buffer.push_str(&text);
+
+                        // 解析 SSE 格式: "data: {...}\n\n"
+                        while let Some(pos) = buffer.find("\n\n") {
+                            let line = buffer[..pos].to_string();
+                            buffer = buffer[pos + 2..].to_string();
+
+                            if let Some(data) = line.strip_prefix("data: ") {
+                                if data == "[DONE]" {
+                                    yield CompletionStreamEvent::Done;
+                                    return;
+                                }
+
+                                match serde_json::from_str::<serde_json::Value>(data) {
+                                    Ok(chunk) => {
+                                        // 解析 chunk - completions 格式
+                                        if let Some(choices) = chunk.get("choices").and_then(|c| c.as_array()) {
+                                            for choice in choices {
+                                                // 文本内容 (completions 使用 "text" 而不是 "delta.content")
+                                                if let Some(text) = choice.get("text").and_then(|t| t.as_str()) {
+                                                    if !text.is_empty() {
+                                                        yield CompletionStreamEvent::Text(text.to_string());
+                                                    }
+                                                }
+
+                                                // finish_reason
+                                                if let Some(reason) = choice.get("finish_reason").and_then(|r| r.as_str()) {
+                                                    if reason != "null" {
+                                                        yield CompletionStreamEvent::FinishReason(reason.to_string());
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // Usage
+                                        if let Some(usage) = chunk.get("usage") {
+                                            if let (Some(prompt), Some(completion), Some(total)) = (
+                                                usage.get("prompt_tokens").and_then(|v| v.as_u64()),
+                                                usage.get("completion_tokens").and_then(|v| v.as_u64()),
+                                                usage.get("total_tokens").and_then(|v| v.as_u64()),
+                                            ) {
+                                                yield CompletionStreamEvent::Usage(Usage {
+                                                    prompt_tokens: prompt,
+                                                    completion_tokens: completion,
+                                                    total_tokens: total,
+                                                });
+                                            }
+                                        }
+                                    }
+                                    Err(e) => {
+                                        yield CompletionStreamEvent::Error(crate::VllmError::Json(e.to_string()));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        yield CompletionStreamEvent::Error(crate::VllmError::Http(e.to_string()));
+                    }
+                }
+            }
+        };
+
+        Self {
+            inner: stream.boxed()
+        }
+    }
+
+    /// 获取下一个事件
+    pub async fn next(&mut self) -> Option<CompletionStreamEvent> {
+        use futures::StreamExt;
+        self.inner.next().await
+    }
+
+    /// 收集所有文本为字符串
+    pub async fn collect_text(self) -> Result<String, crate::VllmError> {
+        use futures::StreamExt;
+
+        let mut text = String::new();
+        let mut stream = self.inner;
+
+        while let Some(event) = stream.next().await {
+            match event {
+                CompletionStreamEvent::Text(delta) => text.push_str(&delta),
+                CompletionStreamEvent::Error(e) => return Err(e),
+                CompletionStreamEvent::Done => break,
+                _ => {}
+            }
+        }
+
+        Ok(text)
+    }
+
+    /// 转换为 Stream
+    pub fn into_stream(self) -> futures::stream::BoxStream<'static, CompletionStreamEvent> {
+        self.inner
+    }
+}
+
+/// Completions 流式事件
+#[derive(Debug, Clone)]
+pub enum CompletionStreamEvent {
+    /// 文本增量
+    Text(String),
+
+    /// 结束原因
+    FinishReason(String),
+
+    /// Token 使用统计
+    Usage(Usage),
+
+    /// 流结束
+    Done,
+
+    /// 错误
+    Error(crate::VllmError),
+}
+
+// ============================================================================
 // Helper implementations
 // ============================================================================
 

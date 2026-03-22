@@ -3,7 +3,7 @@
 //! OpenAI 的旧版 API，vLLM 也支持
 
 use crate::error::VllmError;
-use crate::types::CompletionResponse;
+use crate::types::{CompletionResponse, CompletionStream};
 use reqwest::Client;
 use serde_json::Value;
 
@@ -71,6 +71,24 @@ pub struct CompletionRequest {
     top_k: Option<i32>,
     stop: Option<Value>,
     stream: bool,
+}
+
+impl Clone for CompletionRequest {
+    fn clone(&self) -> Self {
+        Self {
+            http: self.http.clone(),
+            base_url: self.base_url.clone(),
+            api_key: self.api_key.clone(),
+            model: self.model.clone(),
+            prompt: self.prompt.clone(),
+            max_tokens: self.max_tokens,
+            temperature: self.temperature,
+            top_p: self.top_p,
+            top_k: self.top_k,
+            stop: self.stop.clone(),
+            stream: self.stream,
+        }
+    }
 }
 
 impl CompletionRequest {
@@ -183,5 +201,30 @@ impl CompletionRequest {
         let raw: Value = response.json().await?;
 
         CompletionResponse::from_raw(raw)
+    }
+
+    /// Send request and get streaming response
+    pub async fn send_stream(self) -> Result<CompletionStream, VllmError> {
+        let mut request = self.clone();
+        request.stream = true;
+
+        let body = request.build_body()?;
+        let url = format!("{}/completions", self.base_url);
+
+        let mut req = self.http.post(&url).json(&body);
+
+        if let Some(api_key) = &self.api_key {
+            req = req.bearer_auth(api_key);
+        }
+
+        let response = req.send().await?;
+
+        let status = response.status();
+        if !status.is_success() {
+            let error_text = response.text().await.unwrap_or_default();
+            return Err(VllmError::api(status.as_u16(), error_text));
+        }
+
+        Ok(CompletionStream::new(response))
     }
 }

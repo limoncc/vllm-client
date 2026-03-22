@@ -14,6 +14,7 @@
 - [Examples](./examples.md)
   - [Basic Chat](./examples/basic-chat.md)
   - [Streaming Chat](./examples/streaming-chat.md)
+  - [Streaming Completions](./examples/streaming-completions.md)
   - [Tool Calling](./examples/tool-calling.md)
   - [Multi-modal](./examples/multimodal.md)
 - [Advanced](./advanced.md)
