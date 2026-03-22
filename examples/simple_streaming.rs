@@ -16,6 +16,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .model("Qwen3.5-35B-A3B")
         .messages(json!([{"role": "user", "content": "写一首关于春天的诗"}]))
         .stream(true)
+        .extra(json!({"chat_template_kwargs": {"enable_thinking": false}}))
         .send_stream()
         .await?;
 
