@@ -330,7 +330,6 @@ impl ChatCompletionsRequest {
 
         let body = request.build_body()?;
         let url = format!("{}/chat/completions", request.base_url);
-
         let mut req = request.http.post(&url).json(&body);
 
         if let Some(api_key) = &request.api_key {

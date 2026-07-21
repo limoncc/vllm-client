@@ -290,12 +290,35 @@ impl MessageStream {
                         let text = String::from_utf8_lossy(&bytes);
                         buffer.push_str(&text);
 
-                        // 解析 SSE 格式: "data: {...}\n\n"
-                        while let Some(pos) = buffer.find("\n\n") {
-                            let line = buffer[..pos].to_string();
-                            buffer = buffer[pos + 2..].to_string();
+                        // 解析 SSE 格式，同时支持两类格式:
+                        // - 标准 SSE: 事件间以 \n\n 分隔 (OpenAI 官方)
+                        // - 紧凑格式: 每行一个 data: 事件，以 \n 分隔 (部分 API)
+                        'parse: loop {
+                            let (line, consumed) = if let Some(pos) = buffer.find("\n\n") {
+                                // 标准 SSE: \n\n 分隔
+                                (buffer[..pos].to_string(), pos + 2)
+                            } else if let Some(pos) = buffer.find('\n') {
+                                // 紧凑格式: 单 \n 分隔，只处理 data:(可有空行，但忽略非 data 行)
+                                let l = buffer[..pos].to_string();
+                                if l.starts_with("data: ") {
+                                    (l, pos + 1)
+                                } else {
+                                    // 非 data 行（如空行），跳过
+                                    buffer = buffer[pos + 1..].to_string();
+                                    continue 'parse;
+                                }
+                            } else {
+                                break 'parse;
+                            };
 
-                            if let Some(data) = line.strip_prefix("data: ") {
+                            buffer = buffer[consumed..].to_string();
+
+                            if line.is_empty() {
+                                continue;
+                            }
+
+                            // 处理 SSE data 行（兼容 data: {...} 和 data:{...} 两种格式）
+                            if let Some(data) = line.strip_prefix("data: ").or_else(|| line.strip_prefix("data:")) {
                                 if data == "[DONE]" {
                                     yield StreamEvent::Done;
                                     return;
