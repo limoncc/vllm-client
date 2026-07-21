@@ -14,8 +14,8 @@
 //! cargo run --example streaming_chat
 //! ```
 
-use std::io::Write;
 use std::env;
+use std::io::Write;
 use vllm_client::{json, StreamEvent, VllmClient};
 
 // ANSI 颜色码
@@ -26,8 +26,8 @@ const COLOR_RESET: &str = "\x1b[0m"; // 重置颜色
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv::dotenv().ok();
 
-    let base_url = env::var("VLLM_BASE_URL")
-        .expect("请设置 VLLM_BASE_URL 环境变量，或创建 .env 文件");
+    let base_url =
+        env::var("VLLM_BASE_URL").expect("请设置 VLLM_BASE_URL 环境变量，或创建 .env 文件");
     let api_key = env::var("VLLM_API_KEY").ok();
     let model = env::var("VLLM_MODEL").unwrap_or_else(|_| "Ring-2.6-1T".into());
     let timeout: u64 = env::var("VLLM_TIMEOUT")
@@ -59,8 +59,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             {"role": "system", "content": "你是一个友好的AI助手, 你思考和说话以简洁著称。很少废话，你使用中文思考和回复"},
             {"role": "user", "content": "什么是机器学习,一句话说明即可。"}
         ]))
-        // .extra(json!({"chat_template_kwargs": {"enable_thinking": false}}))
-        .extra(json!({"reasoning": {"effort": "xhigh"}}))
+        .extra(json!({"chat_template_kwargs": {"enable_thinking": false}}))
+        // .extra(json!({"reasoning": {"effort": "high"}}))
         .temperature(0.7)
         .max_tokens(2000)
         .stream(true)
@@ -101,7 +101,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 // 第一次输出思考内容时打印标记并设置灰色
                 if !in_reasoning {
-                    print!("{}[思考] ", COLOR_GRAY);
+                    print!("{}[思考]\n", COLOR_GRAY);
                     std::io::stdout().flush().ok();
                     in_reasoning = true;
                 }
@@ -111,24 +111,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 std::io::stdout().flush().ok();
             }
             StreamEvent::Usage(usage) => {
-                // 如果之前在思考模式，先重置颜色
+                // 打印 usage 统计（只在 Done 前发一次）
                 if in_reasoning {
-                    println!("{}", COLOR_RESET);
+                    print!("{}", COLOR_RESET);
+                    std::io::stdout().flush().ok();
                 }
-
-                // 流结束时输出 token 使用统计
                 println!("\n\n--- Token 使用统计 ---");
                 println!("提示词 tokens: {}", usage.prompt_tokens);
                 println!("生成 tokens: {}", usage.completion_tokens);
                 println!("总计 tokens: {}", usage.total_tokens);
             }
             StreamEvent::Done => {
-                // 确保重置颜色
-                if in_reasoning {
-                    print!("{}", COLOR_RESET);
-                    std::io::stdout().flush().ok();
-                }
-                println!("\n\n=== 聊天完成 ===");
+                println!("\n=== 聊天完成 ===");
                 break;
             }
             StreamEvent::Error(e) => {
