@@ -46,3 +46,6 @@ temp/
 *.tmp
 *.temp
 .claude
+.gitnexus
+AGENTS.md
+CLAUDE.md

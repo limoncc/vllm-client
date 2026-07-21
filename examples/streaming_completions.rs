@@ -2,25 +2,46 @@
 //!
 //! 演示如何使用 vllm-client 进行流式 Completions (旧版 API)
 //!
+//! 环境变量:
+//!   VLLM_BASE_URL  - API 地址（必填）
+//!   VLLM_API_KEY   - API 密钥（可选）
+//!   VLLM_MODEL     - 模型名称（可选，默认 Qwen3.5-35B-A3B）
+//!   VLLM_TIMEOUT   - 超时秒数（可选，默认 120）
+//!
 //! 运行方式:
 //! ```bash
+//! cp .env.example .env    # 首次运行前配置
 //! cargo run --example streaming_completions
 //! ```
 
 use std::io::Write;
+use std::env;
 use vllm_client::{json, CompletionStreamEvent, VllmClient};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // 使用用户提供的配置创建客户端
-    let client = VllmClient::builder()
-        .base_url("http://23.99.0.1:18120/v1")
-        .api_key("sk-f58fe51e-c5f2-4510-3364-36f9c4e0f697")
-        .timeout_secs(120)
-        .build();
+    dotenv::dotenv().ok();
+
+    let base_url = env::var("VLLM_BASE_URL")
+        .expect("请设置 VLLM_BASE_URL 环境变量，或创建 .env 文件");
+    let api_key = env::var("VLLM_API_KEY").ok();
+    let model = env::var("VLLM_MODEL").unwrap_or_else(|_| "Qwen3.5-35B-A3B".into());
+    let timeout: u64 = env::var("VLLM_TIMEOUT")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(120);
+
+    let mut client_builder = VllmClient::builder()
+        .base_url(&base_url)
+        .timeout_secs(timeout);
+
+    if let Some(key) = &api_key {
+        client_builder = client_builder.api_key(key);
+    }
+    let client = client_builder.build();
 
     println!("=== 流式 Completions 示例 ===\n");
-    println!("模型: Qwen3.5-35B-A3B\n");
+    println!("模型: {model}\n");
     println!("提示词: 什么是机器学习");
     println!("\n生成文本: ");
 
@@ -28,7 +49,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut stream = client
         .completions
         .create()
-        .model("Qwen3.5-35B-A3B")
+        .model(&model)
         .prompt(json!("什么是机器学习"))
         .max_tokens(500)
         .temperature(0.7)
