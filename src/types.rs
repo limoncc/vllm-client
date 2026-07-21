@@ -276,6 +276,11 @@ pub struct MessageStream {
 impl MessageStream {
     /// 从 Response 创建流
     pub fn new(response: reqwest::Response) -> Self {
+        Self::with_context(response, None)
+    }
+
+    /// 从 Response 创建流，附带消息文本用于 prompt token 估算
+    pub fn with_context(response: reqwest::Response, messages_text: Option<String>) -> Self {
         use async_stream::stream;
         use futures::StreamExt;
 
@@ -283,6 +288,10 @@ impl MessageStream {
             let mut byte_stream = response.bytes_stream();
             let mut buffer = String::new();
             let mut tool_calls_builders: std::collections::HashMap<usize, ToolCallBuilder> = std::collections::HashMap::new();
+
+            // 本地 token 统计
+            let mut completion_chars: usize = 0;
+            let mut api_usage: Option<Usage> = None;
 
             while let Some(chunk) = byte_stream.next().await {
                 match chunk {
@@ -320,6 +329,12 @@ impl MessageStream {
                             // 处理 SSE data 行（兼容 data: {...} 和 data:{...} 两种格式）
                             if let Some(data) = line.strip_prefix("data: ").or_else(|| line.strip_prefix("data:")) {
                                 if data == "[DONE]" {
+                                    // 有 API 返回的完整 usage 就用 API 的，否则用本地估算
+                                    if let Some(usage) = api_usage.take() {
+                                        yield StreamEvent::Usage(usage);
+                                    } else {
+                                        yield StreamEvent::Usage(estimate_usage(&messages_text, completion_chars));
+                                    }
                                     yield StreamEvent::Done;
                                     return;
                                 }
@@ -334,6 +349,7 @@ impl MessageStream {
                                                 // 文本内容
                                                 if let Some(content) = delta.get("content").and_then(|c| c.as_str()) {
                                                     if !content.is_empty() {
+                                                        completion_chars += content.len();
                                                         yield StreamEvent::Content(content.to_string());
                                                     }
                                                 }
@@ -344,6 +360,7 @@ impl MessageStream {
 
                                                 if let Some(reasoning) = reasoning {
                                                     if !reasoning.is_empty() {
+                                                        completion_chars += reasoning.len();
                                                         yield StreamEvent::Reasoning(reasoning.to_string());
                                                     }
                                                 }
@@ -378,14 +395,14 @@ impl MessageStream {
                                             }
                                         }
 
-                                        // Usage
+                                        // Usage - 记录 API 返回的完整 usage（取最后一次）
                                         if let Some(usage) = chunk.get("usage") {
                                             if let (Some(prompt), Some(completion), Some(total)) = (
                                                 usage.get("prompt_tokens").and_then(|v| v.as_u64()),
                                                 usage.get("completion_tokens").and_then(|v| v.as_u64()),
                                                 usage.get("total_tokens").and_then(|v| v.as_u64()),
                                             ) {
-                                                yield StreamEvent::Usage(Usage {
+                                                api_usage = Some(Usage {
                                                     prompt_tokens: prompt,
                                                     completion_tokens: completion,
                                                     total_tokens: total,
@@ -411,6 +428,13 @@ impl MessageStream {
                 if let Some(tool_call) = builder.build() {
                     yield StreamEvent::ToolCallComplete(tool_call);
                 }
+            }
+
+            // 发送 Usage: 有 API 值就用，否则本地估算
+            if let Some(usage) = api_usage.take() {
+                yield StreamEvent::Usage(usage);
+            } else {
+                yield StreamEvent::Usage(estimate_usage(&messages_text, completion_chars));
             }
 
             yield StreamEvent::Done;
@@ -454,6 +478,20 @@ impl MessageStream {
     /// 转换为 Stream
     pub fn into_stream(self) -> futures::stream::BoxStream<'static, StreamEvent> {
         self.inner
+    }
+}
+
+/// 当 API 未返回 usage 时，用本地估算值
+fn estimate_usage(messages_text: &Option<String>, completion_chars: usize) -> Usage {
+    let prompt_tokens = messages_text
+        .as_ref()
+        .map(|t| (t.len() / 2) as u64) // 中英文混合: 2字 ≈ 1 token
+        .unwrap_or(0);
+    let completion_tokens = completion_chars as u64;
+    Usage {
+        prompt_tokens,
+        completion_tokens,
+        total_tokens: prompt_tokens + completion_tokens,
     }
 }
 

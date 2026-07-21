@@ -328,6 +328,9 @@ impl ChatCompletionsRequest {
         let mut request = self.clone();
         request.stream = true;
 
+        // 提取 messages 文本用于 prompt token 估算
+        let messages_text = request.messages.as_ref().map(extract_messages_text);
+
         let body = request.build_body()?;
         let url = format!("{}/chat/completions", request.base_url);
         let mut req = request.http.post(&url).json(&body);
@@ -344,8 +347,33 @@ impl ChatCompletionsRequest {
             return Err(VllmError::api(status.as_u16(), error_text));
         }
 
-        Ok(MessageStream::new(response))
+        Ok(MessageStream::with_context(response, messages_text))
     }
+}
+
+/// 从 messages JSON 数组中提取所有文本内容，用于 prompt token 估算
+fn extract_messages_text(messages: &serde_json::Value) -> String {
+    let mut text = String::new();
+    if let Some(arr) = messages.as_array() {
+        for msg in arr {
+            if let Some(content) = msg.get("content") {
+                // content 可以是字符串或数组（多模态）
+                match content {
+                    serde_json::Value::String(s) => text.push_str(s),
+                    serde_json::Value::Array(parts) => {
+                        for part in parts {
+                            if let Some(t) = part.get("text").and_then(|v| v.as_str()) {
+                                text.push_str(t);
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            text.push(' '); // 消息间分隔
+        }
+    }
+    text
 }
 
 impl Clone for ChatCompletionsRequest {
