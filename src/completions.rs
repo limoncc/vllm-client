@@ -1,13 +1,16 @@
-//! Legacy Completions API (/v1/completions)
+//! 旧版 Completions 模块 —— `/v1/completions`
 //!
-//! OpenAI 的旧版 API，vLLM 也支持
+//! OpenAI 旧版补全接口，vLLM 也兼容支持。
 
 use crate::error::VllmError;
+use crate::request;
 use crate::types::{CompletionResponse, CompletionStream};
 use reqwest::Client;
 use serde_json::Value;
 
-/// Completions 模块入口
+/// Legacy Completions 入口
+///
+/// 访问方法: `client.completions.create()`
 pub struct Completions {
     pub(crate) http: Client,
     pub(crate) base_url: String,
@@ -23,24 +26,7 @@ impl Completions {
         }
     }
 
-    /// Create a legacy completion request
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use vllm_client::VllmClient;
-    /// # #[tokio::main]
-    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    /// # let client = VllmClient::new("http://localhost:8000/v1");
-    /// let response = client.completions.create()
-    ///     .model("model-name")
-    ///     .prompt("Hello")
-    ///     .max_tokens(100)
-    ///     .send()
-    ///     .await?;
-    /// # Ok(())
-    /// # }
-    /// ```
+    /// 创建一个 Legacy Completion 请求
     pub fn create(&self) -> CompletionRequest {
         CompletionRequest {
             http: self.http.clone(),
@@ -58,7 +44,7 @@ impl Completions {
     }
 }
 
-/// Completion request builder
+/// Legacy Completion 请求构建器
 pub struct CompletionRequest {
     http: Client,
     base_url: String,
@@ -92,61 +78,62 @@ impl Clone for CompletionRequest {
 }
 
 impl CompletionRequest {
-    /// Set the model name
+    /// 设置模型名称
     pub fn model(mut self, model: impl Into<String>) -> Self {
         self.model = Some(model.into());
         self
     }
 
-    /// Set prompt (text or array)
+    /// 设置 prompt（字符串或数组）
     pub fn prompt(mut self, prompt: impl Into<Value>) -> Self {
         self.prompt = Some(prompt.into());
         self
     }
 
-    /// Set max tokens
+    /// 设置 max_tokens
     pub fn max_tokens(mut self, max_tokens: u32) -> Self {
         self.max_tokens = Some(max_tokens);
         self
     }
 
-    /// Set temperature
+    /// 设置 temperature
     pub fn temperature(mut self, temperature: f32) -> Self {
         self.temperature = Some(temperature);
         self
     }
 
-    /// Set top_p
+    /// 设置 top_p
     pub fn top_p(mut self, top_p: f32) -> Self {
         self.top_p = Some(top_p);
         self
     }
 
-    /// Set top_k (vLLM extension)
+    /// 设置 top_k（vLLM 扩展参数）
     pub fn top_k(mut self, top_k: i32) -> Self {
         self.top_k = Some(top_k);
         self
     }
 
-    /// Set stop sequences
+    /// 设置 stop 序列
     pub fn stop(mut self, stop: Value) -> Self {
         self.stop = Some(stop);
         self
     }
 
-    /// Enable streaming mode
+    /// 启用流式模式
     pub fn stream(mut self, stream: bool) -> Self {
         self.stream = stream;
         self
     }
 
-    /// Build request body
+    // -------- 内部方法 --------
+
+    /// 构造 JSON 请求体
     fn build_body(&self) -> Result<Value, VllmError> {
         let model = self
             .model
             .as_ref()
             .ok_or_else(|| VllmError::MissingParameter("model is required".into()))?;
-
         let prompt = self
             .prompt
             .as_ref()
@@ -157,21 +144,19 @@ impl CompletionRequest {
             "prompt": prompt,
             "stream": self.stream,
         });
-
         let obj = body.as_object_mut().unwrap();
 
-        if let Some(max_tokens) = self.max_tokens {
-            obj.insert("max_tokens".into(), serde_json::json!(max_tokens));
+        macro_rules! insert_if_some {
+            ($map:expr, $key:expr, $val:expr) => {
+                if let Some(v) = $val {
+                    $map.insert($key.into(), serde_json::json!(v));
+                }
+            };
         }
-        if let Some(temperature) = self.temperature {
-            obj.insert("temperature".into(), serde_json::json!(temperature));
-        }
-        if let Some(top_p) = self.top_p {
-            obj.insert("top_p".into(), serde_json::json!(top_p));
-        }
-        if let Some(top_k) = self.top_k {
-            obj.insert("top_k".into(), serde_json::json!(top_k));
-        }
+        insert_if_some!(obj, "max_tokens", self.max_tokens);
+        insert_if_some!(obj, "temperature", self.temperature);
+        insert_if_some!(obj, "top_p", self.top_p);
+        insert_if_some!(obj, "top_k", self.top_k);
         if let Some(stop) = &self.stop {
             obj.insert("stop".into(), stop.clone());
         }
@@ -179,51 +164,29 @@ impl CompletionRequest {
         Ok(body)
     }
 
-    /// Send request
+    /// 执行请求，返回非流式响应
     pub async fn send(self) -> Result<CompletionResponse, VllmError> {
         let body = self.build_body()?;
         let url = format!("{}/completions", self.base_url);
-
-        let mut request = self.http.post(&url).json(&body);
-
-        if let Some(api_key) = &self.api_key {
-            request = request.bearer_auth(api_key);
-        }
-
-        let response = request.send().await?;
-
-        let status = response.status();
-        if !status.is_success() {
-            let error_text = response.text().await.unwrap_or_default();
-            return Err(VllmError::api(status.as_u16(), error_text));
-        }
-
-        let raw: Value = response.json().await?;
-
+        let raw = request::send_and_parse(request::with_auth(
+            self.http.post(&url).json(&body),
+            &self.api_key,
+        ))
+        .await?;
         CompletionResponse::from_raw(raw)
     }
 
-    /// Send request and get streaming response
-    pub async fn send_stream(self) -> Result<CompletionStream, VllmError> {
-        let mut request = self.clone();
-        request.stream = true;
+    /// 执行请求，返回流式响应
+    pub async fn send_stream(mut self) -> Result<CompletionStream, VllmError> {
+        self.stream = true;
 
-        let body = request.build_body()?;
+        let body = self.build_body()?;
         let url = format!("{}/completions", self.base_url);
-
-        let mut req = self.http.post(&url).json(&body);
-
-        if let Some(api_key) = &self.api_key {
-            req = req.bearer_auth(api_key);
-        }
-
-        let response = req.send().await?;
-
-        let status = response.status();
-        if !status.is_success() {
-            let error_text = response.text().await.unwrap_or_default();
-            return Err(VllmError::api(status.as_u16(), error_text));
-        }
+        let response = request::send_for_stream(request::with_auth(
+            self.http.post(&url).json(&body),
+            &self.api_key,
+        ))
+        .await?;
 
         Ok(CompletionStream::new(response))
     }

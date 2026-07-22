@@ -1,13 +1,15 @@
-//! VLLM Client implementation
+//! VLLM Client 实现
+//!
+//! 提供 `VllmClient` 主结构体，支持 `new()`、`with_api_key()`、`timeout_secs()` 和 `builder()` 模式。
 
 use crate::chat::Chat;
 use crate::completions::Completions;
 use reqwest::Client;
 use std::time::Duration;
 
-/// VLLM OpenAI-compatible client
+/// VLLM OpenAI 兼容客户端
 ///
-/// # Example
+/// # 基本用法
 ///
 /// ```rust
 /// use vllm_client::VllmClient;
@@ -19,63 +21,35 @@ pub struct VllmClient {
     http: Client,
     base_url: String,
     api_key: Option<String>,
-    /// Chat completions API
+
+    /// Chat Completions API（`client.chat.completions().create().model(...).send()`）
     pub chat: Chat,
-    /// Legacy completions API
+
+    /// Legacy Completions API（`client.completions.create().model(...).send()`）
     pub completions: Completions,
 }
 
 impl VllmClient {
-    /// Create a new client with base URL
+    /// 创建客户端
     ///
-    /// # Arguments
-    ///
-    /// * `base_url` - The base URL of the vLLM server (e.g., "http://localhost:8000/v1")
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use vllm_client::VllmClient;
-    ///
-    /// let client = VllmClient::new("http://localhost:8000/v1");
-    /// ```
+    /// `base_url` 是 vLLM 服务的地址（如 `"http://localhost:8000/v1"`）。
     pub fn new(base_url: impl Into<String>) -> Self {
-        let base_url = base_url.into();
-        let base_url = base_url.trim_end_matches('/').to_string();
-
+        let base_url = base_url.into().trim_end_matches('/').to_string();
         let http = Client::new();
-        let chat = Chat::new(http.clone(), base_url.clone(), None);
-        let completions = Completions::new(http.clone(), base_url.clone(), None);
 
         Self {
+            chat: Chat::new(http.clone(), base_url.clone(), None),
+            completions: Completions::new(http.clone(), base_url.clone(), None),
             http,
             base_url,
             api_key: None,
-            chat,
-            completions,
         }
     }
 
-    /// Set API key (builder pattern)
-    ///
-    /// # Arguments
-    ///
-    /// * `api_key` - The API key for authentication
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use vllm_client::VllmClient;
-    ///
-    /// let client = VllmClient::new("http://localhost:8000/v1").with_api_key("sk-xxx");
-    /// ```
+    /// 设置 API Key（Bearer Token）
     pub fn with_api_key(mut self, api_key: impl Into<String>) -> Self {
         self.api_key = Some(api_key.into());
-        self.chat = Chat::new(
-            self.http.clone(),
-            self.base_url.clone(),
-            self.api_key.clone(),
-        );
+        self.chat = Chat::new(self.http.clone(), self.base_url.clone(), self.api_key.clone());
         self.completions = Completions::new(
             self.http.clone(),
             self.base_url.clone(),
@@ -84,45 +58,34 @@ impl VllmClient {
         self
     }
 
-    /// Set request timeout in seconds
-    ///
-    /// # Arguments
-    ///
-    /// * `secs` - Timeout in seconds
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use vllm_client::VllmClient;
-    ///
-    /// let client = VllmClient::new("http://localhost:8000/v1").timeout_secs(60);
-    /// ```
+    /// 设置请求超时（秒）
     pub fn timeout_secs(mut self, secs: u64) -> Self {
         let http = Client::builder()
             .timeout(Duration::from_secs(secs))
             .build()
             .unwrap_or_else(|_| Client::new());
 
-        self.chat = Chat::new(http.clone(), self.base_url.clone(), self.api_key.clone());
-        self.completions =
-            Completions::new(http.clone(), self.base_url.clone(), self.api_key.clone());
         self.http = http;
+        self.chat = Chat::new(self.http.clone(), self.base_url.clone(), self.api_key.clone());
+        self.completions = Completions::new(
+            self.http.clone(),
+            self.base_url.clone(),
+            self.api_key.clone(),
+        );
         self
     }
 
-    /// Get base URL
+    /// 获取 base URL
     pub fn base_url(&self) -> &str {
         &self.base_url
     }
 
-    /// Get API key
+    /// 获取 API Key
     pub fn api_key(&self) -> Option<&str> {
         self.api_key.as_deref()
     }
 
-    /// Create a builder for more configuration options
-    ///
-    /// # Example
+    /// 使用构建器模式创建客户端
     ///
     /// ```rust
     /// use vllm_client::VllmClient;
@@ -144,19 +107,11 @@ impl Default for VllmClient {
     }
 }
 
-/// Builder for VllmClient
-///
-/// # Example
-///
-/// ```rust
-/// use vllm_client::VllmClient;
-///
-/// let client = VllmClient::builder()
-///     .base_url("http://localhost:8000/v1")
-///     .api_key("sk-xxx")
-///     .timeout_secs(120)
-///     .build();
-/// ```
+// ============================================================================
+// Builder
+// ============================================================================
+
+/// VllmClient 构建器
 pub struct VllmClientBuilder {
     base_url: String,
     api_key: Option<String>,
@@ -174,25 +129,25 @@ impl Default for VllmClientBuilder {
 }
 
 impl VllmClientBuilder {
-    /// Set base URL
+    /// 设置 base URL
     pub fn base_url(mut self, base_url: impl Into<String>) -> Self {
         self.base_url = base_url.into();
         self
     }
 
-    /// Set API key
+    /// 设置 API Key
     pub fn api_key(mut self, api_key: impl Into<String>) -> Self {
         self.api_key = Some(api_key.into());
         self
     }
 
-    /// Set timeout in seconds
+    /// 设置超时时间（秒）
     pub fn timeout_secs(mut self, secs: u64) -> Self {
         self.timeout_secs = Some(secs);
         self
     }
 
-    /// Build the client
+    /// 构建 VllmClient
     pub fn build(self) -> VllmClient {
         let base_url = self.base_url.trim_end_matches('/').to_string();
 
@@ -205,15 +160,12 @@ impl VllmClientBuilder {
             Client::new()
         };
 
-        let chat = Chat::new(http.clone(), base_url.clone(), self.api_key.clone());
-        let completions = Completions::new(http.clone(), base_url.clone(), self.api_key.clone());
-
         VllmClient {
+            chat: Chat::new(http.clone(), base_url.clone(), self.api_key.clone()),
+            completions: Completions::new(http.clone(), base_url.clone(), self.api_key.clone()),
             http,
             base_url,
             api_key: self.api_key,
-            chat,
-            completions,
         }
     }
 }

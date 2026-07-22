@@ -1,13 +1,16 @@
-//! Chat module - provides `client.chat.completions().create()` API
+//! Chat 模块 —— 提供 `client.chat.completions()...` API
+//!
+//! 对应 OpenAI /v1/chat/completions 端点。
 
 use crate::error::VllmError;
+use crate::request;
 use crate::types::{ChatCompletionResponse, MessageStream};
 use reqwest::Client;
 use serde_json::Value;
 
-/// Chat API module
+/// Chat API 入口
 ///
-/// Provides access to chat completions API.
+/// 访问方法: `client.chat.completions()`
 pub struct Chat {
     http: Client,
     base_url: String,
@@ -23,25 +26,9 @@ impl Chat {
         }
     }
 
-    /// Access completions API
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use vllm_client::{VllmClient, json};
-    /// # #[tokio::main]
-    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    /// # let client = VllmClient::new("http://localhost:8000/v1");
-    /// let response = client.chat.completions().create()
-    ///     .model("Qwen/Qwen2.5-72B-Instruct")
-    ///     .messages(json!([{"role": "user", "content": "Hello!"}]))
-    ///     .send()
-    ///     .await?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    pub fn completions(&self) -> Completions {
-        Completions::new(
+    /// 进入 Chat Completions 构建器
+    pub fn completions(&self) -> ChatCompletions {
+        ChatCompletions::new(
             self.http.clone(),
             self.base_url.clone(),
             self.api_key.clone(),
@@ -49,14 +36,16 @@ impl Chat {
     }
 }
 
-/// Completions API (chat.completions)
-pub struct Completions {
+/// Chat Completions 请求构建器
+///
+/// 使用 Builder 模式设置参数，最后调用 `.send()` 或 `.send_stream()` 执行请求。
+pub struct ChatCompletions {
     http: Client,
     base_url: String,
     api_key: Option<String>,
 }
 
-impl Completions {
+impl ChatCompletions {
     pub(crate) fn new(http: Client, base_url: String, api_key: Option<String>) -> Self {
         Self {
             http,
@@ -65,29 +54,9 @@ impl Completions {
         }
     }
 
-    /// Create a new chat completion request
-    ///
-    /// # Example
-    ///
-    /// ```rust,no_run
-    /// # use vllm_client::{VllmClient, json};
-    /// # #[tokio::main]
-    /// # async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    /// # let client = VllmClient::new("http://localhost:8000/v1");
-    /// let response = client.chat.completions().create()
-    ///     .model("Qwen/Qwen2.5-72B-Instruct")
-    ///     .messages(json!([
-    ///         {"role": "user", "content": "Hello!"}
-    ///     ]))
-    ///     .temperature(0.7)
-    ///     .max_tokens(1024)
-    ///     .send()
-    ///     .await?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    pub fn create(&self) -> ChatCompletionsRequest {
-        ChatCompletionsRequest {
+    /// 创建一个新请求
+    pub fn create(&self) -> ChatCompletionRequest {
+        ChatCompletionRequest {
             http: self.http.clone(),
             base_url: self.base_url.clone(),
             api_key: self.api_key.clone(),
@@ -106,10 +75,10 @@ impl Completions {
     }
 }
 
-/// Chat completion request builder
+/// 单个 Chat Completion 请求
 ///
-/// Build a request using the builder pattern, then call `.send()` or `.send_stream()`.
-pub struct ChatCompletionsRequest {
+/// 支持的所有参数，通过链式调用设置。
+pub struct ChatCompletionRequest {
     http: Client,
     base_url: String,
     api_key: Option<String>,
@@ -126,257 +95,7 @@ pub struct ChatCompletionsRequest {
     extra: Option<Value>,
 }
 
-impl ChatCompletionsRequest {
-    /// Set the model name
-    pub fn model(mut self, model: impl Into<String>) -> Self {
-        self.model = Some(model.into());
-        self
-    }
-
-    /// Set messages (JSON format)
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// .messages(json!([
-    ///     {"role": "system", "content": "You are a helpful assistant."},
-    ///     {"role": "user", "content": "Hello!"}
-    /// ]))
-    /// ```
-    pub fn messages(mut self, messages: Value) -> Self {
-        self.messages = Some(messages);
-        self
-    }
-
-    /// Set temperature (0.0 - 2.0)
-    pub fn temperature(mut self, temperature: f32) -> Self {
-        self.temperature = Some(temperature);
-        self
-    }
-
-    /// Set max tokens
-    pub fn max_tokens(mut self, max_tokens: u32) -> Self {
-        self.max_tokens = Some(max_tokens);
-        self
-    }
-
-    /// Set top_p (0.0 - 1.0)
-    pub fn top_p(mut self, top_p: f32) -> Self {
-        self.top_p = Some(top_p);
-        self
-    }
-
-    /// Set top_k (vLLM extension)
-    pub fn top_k(mut self, top_k: i32) -> Self {
-        self.top_k = Some(top_k);
-        self
-    }
-
-    /// Set stop sequences
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// .stop(json!(["END", "STOP"]))
-    /// // or single string
-    /// .stop(json!("END"))
-    /// ```
-    pub fn stop(mut self, stop: Value) -> Self {
-        self.stop = Some(stop);
-        self
-    }
-
-    /// Enable streaming mode
-    pub fn stream(mut self, stream: bool) -> Self {
-        self.stream = stream;
-        self
-    }
-
-    /// Set tools (JSON format)
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// .tools(json!([
-    ///     {
-    ///         "type": "function",
-    ///         "function": {
-    ///             "name": "get_weather",
-    ///             "description": "Get weather info",
-    ///             "parameters": {
-    ///                 "type": "object",
-    ///                 "properties": {
-    ///                     "city": {"type": "string"}
-    ///                 },
-    ///                 "required": ["city"]
-    ///             }
-    ///         }
-    ///     }
-    /// ]))
-    /// ```
-    pub fn tools(mut self, tools: Value) -> Self {
-        self.tools = Some(tools);
-        self
-    }
-
-    /// Set tool choice
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// .tool_choice(json!("auto"))           // "auto" | "none" | "required"
-    /// .tool_choice(json!({"type": "function", "function": {"name": "get_weather"}}))
-    /// ```
-    pub fn tool_choice(mut self, tool_choice: Value) -> Self {
-        self.tool_choice = Some(tool_choice);
-        self
-    }
-
-    /// Set extra parameters (vLLM extensions)
-    ///
-    /// # Example
-    ///
-    /// ```ignore
-    /// .extra(json!({
-    ///     "chat_template_kwargs": {"think_mode": true},
-    ///     "reasoning_effort": "high"
-    /// }))
-    /// ```
-    pub fn extra(mut self, extra: Value) -> Self {
-        self.extra = Some(extra);
-        self
-    }
-
-    /// Build request body as JSON
-    fn build_body(&self) -> Result<Value, VllmError> {
-        let model = self
-            .model
-            .as_ref()
-            .ok_or_else(|| VllmError::MissingParameter("model is required".into()))?;
-
-        let messages = self
-            .messages
-            .as_ref()
-            .ok_or_else(|| VllmError::MissingParameter("messages is required".into()))?;
-
-        let mut body = serde_json::json!({
-            "model": model,
-            "messages": messages,
-            "stream": self.stream,
-        });
-
-        let obj = body.as_object_mut().unwrap();
-
-        if let Some(temperature) = self.temperature {
-            obj.insert("temperature".into(), serde_json::json!(temperature));
-        }
-        if let Some(max_tokens) = self.max_tokens {
-            obj.insert("max_tokens".into(), serde_json::json!(max_tokens));
-        }
-        if let Some(top_p) = self.top_p {
-            obj.insert("top_p".into(), serde_json::json!(top_p));
-        }
-        if let Some(top_k) = self.top_k {
-            obj.insert("top_k".into(), serde_json::json!(top_k));
-        }
-        if let Some(stop) = &self.stop {
-            obj.insert("stop".into(), stop.clone());
-        }
-        if let Some(tools) = &self.tools {
-            obj.insert("tools".into(), tools.clone());
-        }
-        if let Some(tool_choice) = &self.tool_choice {
-            obj.insert("tool_choice".into(), tool_choice.clone());
-        }
-        if let Some(extra) = &self.extra {
-            if let Some(extra_obj) = extra.as_object() {
-                for (key, value) in extra_obj {
-                    obj.insert(key.clone(), value.clone());
-                }
-            }
-        }
-
-        Ok(body)
-    }
-
-    /// Send request and get response
-    pub async fn send(self) -> Result<ChatCompletionResponse, VllmError> {
-        let body = self.build_body()?;
-        let url = format!("{}/chat/completions", self.base_url);
-
-        let mut request = self.http.post(&url).json(&body);
-
-        if let Some(api_key) = &self.api_key {
-            request = request.bearer_auth(api_key);
-        }
-
-        let response = request.send().await?;
-
-        let status = response.status();
-        if !status.is_success() {
-            let error_text = response.text().await.unwrap_or_default();
-            return Err(VllmError::api(status.as_u16(), error_text));
-        }
-
-        let raw: Value = response.json().await?;
-
-        ChatCompletionResponse::from_raw(raw)
-    }
-
-    /// Send request and get streaming response
-    pub async fn send_stream(self) -> Result<MessageStream, VllmError> {
-        let mut request = self.clone();
-        request.stream = true;
-
-        // 提取 messages 文本用于 prompt token 估算
-        let messages_text = request.messages.as_ref().map(extract_messages_text);
-
-        let body = request.build_body()?;
-        let url = format!("{}/chat/completions", request.base_url);
-        let mut req = request.http.post(&url).json(&body);
-
-        if let Some(api_key) = &request.api_key {
-            req = req.bearer_auth(api_key);
-        }
-
-        let response = req.send().await?;
-
-        let status = response.status();
-        if !status.is_success() {
-            let error_text = response.text().await.unwrap_or_default();
-            return Err(VllmError::api(status.as_u16(), error_text));
-        }
-
-        Ok(MessageStream::with_context(response, messages_text))
-    }
-}
-
-/// 从 messages JSON 数组中提取所有文本内容，用于 prompt token 估算
-fn extract_messages_text(messages: &serde_json::Value) -> String {
-    let mut text = String::new();
-    if let Some(arr) = messages.as_array() {
-        for msg in arr {
-            if let Some(content) = msg.get("content") {
-                // content 可以是字符串或数组（多模态）
-                match content {
-                    serde_json::Value::String(s) => text.push_str(s),
-                    serde_json::Value::Array(parts) => {
-                        for part in parts {
-                            if let Some(t) = part.get("text").and_then(|v| v.as_str()) {
-                                text.push_str(t);
-                            }
-                        }
-                    }
-                    _ => {}
-                }
-            }
-            text.push(' '); // 消息间分隔
-        }
-    }
-    text
-}
-
-impl Clone for ChatCompletionsRequest {
+impl Clone for ChatCompletionRequest {
     fn clone(&self) -> Self {
         Self {
             http: self.http.clone(),
@@ -395,4 +114,190 @@ impl Clone for ChatCompletionsRequest {
             extra: self.extra.clone(),
         }
     }
+}
+
+impl ChatCompletionRequest {
+    /// 设置模型名称
+    pub fn model(mut self, model: impl Into<String>) -> Self {
+        self.model = Some(model.into());
+        self
+    }
+
+    /// 设置消息列表（JSON 数组）
+    ///
+    /// 示例:
+    /// ```ignore
+    /// .messages(json!([
+    ///     {"role": "system", "content": "You are helpful."},
+    ///     {"role": "user", "content": "Hello!"}
+    /// ]))
+    /// ```
+    pub fn messages(mut self, messages: Value) -> Self {
+        self.messages = Some(messages);
+        self
+    }
+
+    /// 设置 temperature (0.0 ~ 2.0)
+    pub fn temperature(mut self, temperature: f32) -> Self {
+        self.temperature = Some(temperature);
+        self
+    }
+
+    /// 设置 max_tokens
+    pub fn max_tokens(mut self, max_tokens: u32) -> Self {
+        self.max_tokens = Some(max_tokens);
+        self
+    }
+
+    /// 设置 top_p (0.0 ~ 1.0)
+    pub fn top_p(mut self, top_p: f32) -> Self {
+        self.top_p = Some(top_p);
+        self
+    }
+
+    /// 设置 top_k（vLLM 扩展参数）
+    pub fn top_k(mut self, top_k: i32) -> Self {
+        self.top_k = Some(top_k);
+        self
+    }
+
+    /// 设置 stop 序列
+    pub fn stop(mut self, stop: Value) -> Self {
+        self.stop = Some(stop);
+        self
+    }
+
+    /// 启用流式模式
+    pub fn stream(mut self, stream: bool) -> Self {
+        self.stream = stream;
+        self
+    }
+
+    /// 设置工具定义（JSON 数组）
+    pub fn tools(mut self, tools: Value) -> Self {
+        self.tools = Some(tools);
+        self
+    }
+
+    /// 设置 tool_choice
+    ///
+    /// "auto" | "none" | "required" | {"type":"function","function":{"name":"..."}}
+    pub fn tool_choice(mut self, tool_choice: Value) -> Self {
+        self.tool_choice = Some(tool_choice);
+        self
+    }
+
+    /// 设置额外参数（vLLM 扩展参数，如 `chat_template_kwargs`、`reasoning_effort`）
+    ///
+    /// 会展开合并到请求体中。
+    pub fn extra(mut self, extra: Value) -> Self {
+        self.extra = Some(extra);
+        self
+    }
+
+    // -------- 内部方法 --------
+
+    /// 构造 JSON 请求体
+    fn build_body(&self) -> Result<Value, VllmError> {
+        let model = self
+            .model
+            .as_ref()
+            .ok_or_else(|| VllmError::MissingParameter("model is required".into()))?;
+        let messages = self
+            .messages
+            .as_ref()
+            .ok_or_else(|| VllmError::MissingParameter("messages is required".into()))?;
+
+        let mut body = serde_json::json!({
+            "model": model,
+            "messages": messages,
+            "stream": self.stream,
+        });
+        let obj = body.as_object_mut().unwrap();
+
+        macro_rules! insert_if_some {
+            ($map:expr, $key:expr, $val:expr) => {
+                if let Some(v) = $val {
+                    $map.insert($key.into(), serde_json::json!(v));
+                }
+            };
+        }
+        insert_if_some!(obj, "temperature", self.temperature);
+        insert_if_some!(obj, "max_tokens", self.max_tokens);
+        insert_if_some!(obj, "top_p", self.top_p);
+        insert_if_some!(obj, "top_k", self.top_k);
+        if let Some(stop) = &self.stop {
+            obj.insert("stop".into(), stop.clone());
+        }
+        if let Some(tools) = &self.tools {
+            obj.insert("tools".into(), tools.clone());
+        }
+        if let Some(tc) = &self.tool_choice {
+            obj.insert("tool_choice".into(), tc.clone());
+        }
+        // extra 参数展开合并
+        if let Some(extra) = &self.extra {
+            if let Some(extra_obj) = extra.as_object() {
+                for (k, v) in extra_obj {
+                    obj.insert(k.clone(), v.clone());
+                }
+            }
+        }
+
+        Ok(body)
+    }
+
+    /// 执行请求，返回非流式响应
+    pub async fn send(self) -> Result<ChatCompletionResponse, VllmError> {
+        let body = self.build_body()?;
+        let url = format!("{}/chat/completions", self.base_url);
+        let raw = request::send_and_parse(request::with_auth(
+            self.http.post(&url).json(&body),
+            &self.api_key,
+        ))
+        .await?;
+        ChatCompletionResponse::from_raw(raw)
+    }
+
+    /// 执行请求，返回流式响应
+    pub async fn send_stream(mut self) -> Result<MessageStream, VllmError> {
+        self.stream = true;
+
+        // 提取 messages 文本用于本地 prompt token 估算
+        let messages_text = self.messages.as_ref().map(extract_messages_text);
+
+        let body = self.build_body()?;
+        let url = format!("{}/chat/completions", self.base_url);
+        let response = request::send_for_stream(request::with_auth(
+            self.http.post(&url).json(&body),
+            &self.api_key,
+        ))
+        .await?;
+
+        Ok(MessageStream::with_context(response, messages_text))
+    }
+}
+
+/// 从 messages JSON 数组中提取所有文本内容（用于本地 token 估算）
+fn extract_messages_text(messages: &serde_json::Value) -> String {
+    let mut text = String::new();
+    if let Some(arr) = messages.as_array() {
+        for msg in arr {
+            if let Some(content) = msg.get("content") {
+                match content {
+                    serde_json::Value::String(s) => text.push_str(s),
+                    serde_json::Value::Array(parts) => {
+                        for part in parts {
+                            if let Some(t) = part.get("text").and_then(|v| v.as_str()) {
+                                text.push_str(t);
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            text.push(' ');
+        }
+    }
+    text
 }

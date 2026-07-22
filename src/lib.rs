@@ -1,6 +1,6 @@
-//! VLLM Client - A Rust client for vLLM OpenAI-compatible API
+//! VLLM Client - OpenAI 兼容 vLLM API 的 Rust 客户端
 //!
-//! ## Example
+//! # 快速开始
 //!
 //! ```rust,no_run
 //! use vllm_client::*;
@@ -27,13 +27,14 @@ mod chat;
 mod client;
 mod completions;
 mod error;
-pub mod types;
+mod request;
+mod types;
 
-pub use chat::Chat;
-pub use client::VllmClient;
-pub use completions::Completions;
+pub use chat::{Chat, ChatCompletionRequest, ChatCompletions};
+pub use client::{VllmClient, VllmClientBuilder};
+pub use completions::{CompletionRequest, Completions};
 pub use error::VllmError;
 pub use types::*;
 
-// Re-export serde_json for convenience
+/// 便利性 re-export，方便构造 JSON
 pub use serde_json::json;
